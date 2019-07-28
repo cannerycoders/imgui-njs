@@ -3,7 +3,7 @@
 ## Intro
 
 `imgui-njs` is a manual-port / partial-rewrite of
-[dear imgui](http://github.com/orcunut/imgui), a
+[dear imgui](http://github.com/orconut/imgui), a
 a popular [GUI](https://en.wikipedia.org/wiki/Graphical_user_interface)
 framework used in games and production tooling development.  `dear imgui`
 differs from typical GUI frameworks (like [Qt](https://www.qt.io/)) in its
@@ -108,4 +108,5 @@ web-deployment model, this approach may be for you.
 
 See [todo.md](_todo.md) for current status.  tl;dr: there's still a lot to do!
 The basic widget demos are mostly functional. Code is approximately equivalent
-to dear-imgui 1.70 (WIP).
+to dear-imgui 1.70 (WIP).  This code is very much a work in progress and 
+probably not ready for prime time.
