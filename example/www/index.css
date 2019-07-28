@@ -1,0 +1,55 @@
+body
+{
+    padding: 0px;
+    margin: 0px;
+    background-color: black;
+}
+
+#TitleBar
+{
+    -webkit-app-region: drag;
+    height: 24px;
+    background-color: #111;
+    color: #ddd;
+    margin: 0px;
+    padding-left: 10px;
+    padding-bottom: 2px;
+}
+
+#TitleBar > img
+{
+    height: 24px;
+    text-align: left;
+}
+
+#TitleBar > img:focus
+{
+    outline: none;
+}
+
+#Title
+{
+    margin-left: 10px;
+    margin-top: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: monospace;
+    color: #888;
+}
+
+.FullScreen /* excludes titlebar */
+{
+    position: absolute;
+    left: 0px;
+    top: 24px;
+    width: 100%;
+    height: calc(100% - 24px);
+    overflow-y: hidden; /* prevent scollbars from bgd content */
+    overflow-x: hidden;
+}
+
+.FullScreen:focus
+{
+    outline: none;
+}
+

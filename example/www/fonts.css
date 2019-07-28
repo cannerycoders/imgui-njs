@@ -1,0 +1,58 @@
+
+@font-face
+{
+    font-family: 'Material Icons';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Material Icons'),
+         local('MaterialIcons-Regular'),
+         url(MaterialIcons-Regular.ttf) format('truetype');
+}
+
+.material-icons,
+.micon
+{
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;  /* Preferred icon size */
+    display: inline-block;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+
+    /* Support for all WebKit browsers. */
+    -webkit-font-smoothing: antialiased;
+    /* Support for Safari and Chrome. */
+    text-rendering: optimizeLegibility;
+
+    /* Support for Firefox. */
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Support for IE. */
+    font-feature-settings: 'liga';
+}
+
+/* https://google-webfonts-helper.herokuapp.com/fonts/exo */
+@font-face
+{
+    font-family: 'Exo';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Exo'),
+         local('Exo-Regular'),
+         url(Exo-Regular.ttf) format('truetype');
+}
+
+@font-face
+{
+    font-family: 'SourceCodePro';
+    font-style: normal;
+    font-weight: 400;
+    src: local('SourceCodePro'),
+         local('SourceCodePro-Regular'),
+         url(SourceCodePro-Regular.ttf) format('truetype');
+}
