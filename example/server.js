@@ -14,7 +14,7 @@ const context = {};
 context.app = express();
 context.app.use(logRequestStart);
 context.app.use("/", express.static(path.join(__dirname,"./www")));
-context.app.use("/js/imgui-njs", express.static(path.join(__dirname,"../src")));
+context.app.use("/js/imgui-njs", express.static(path.join(__dirname, "..")));
 context.server = http.createServer({}, context.app);
 
 /* operation -------------------------------------------------------------- */

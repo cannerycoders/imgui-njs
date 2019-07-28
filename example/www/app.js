@@ -1,10 +1,10 @@
-import {Vec2, ValRef, MutableString} from "/js/imgui-njs/types.js";
-import FileBrowser from "/js/imgui-njs/panels/filebrowser.js";
-import {Imgui} from "/js/imgui-njs//imgui.js";
-import {WindowFlags} from "/js/imgui-njs/window.js";
-import {Colors} from "/js/imgui-njs/color.js";
-import Log from "/js/imgui-njs/panels/log.js";
-import ImguiDemo from "/js/imgui-njs/panels/demo.js";
+import {Vec2, ValRef, MutableString} from "/js/imgui-njs/src/types.js";
+import FileBrowser from "/js/imgui-njs/src/panels/filebrowser.js";
+import {Imgui} from "/js/imgui-njs/src/imgui.js";
+import {WindowFlags} from "/js/imgui-njs/src/window.js";
+import {Colors} from "/js/imgui-njs/src/color.js";
+import Log from "/js/imgui-njs/src/panels/log.js";
+import ImguiDemo from "/js/imgui-njs/src/panels/demo.js";
 
 export var AppName = "Simple App";
 

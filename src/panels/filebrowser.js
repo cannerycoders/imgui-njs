@@ -1,6 +1,6 @@
 import {ValRef, Vec2, MutableString} from "../types.js";
 import {WindowFlags} from "../window.js";
-import {InputTextFlags} from "/js/imgui-njs/widgets/inputtext.js";
+import {InputTextFlags} from "../widgets/inputtext.js";
 import {TextFilter} from  "../widgets/text.js";
 import {CondFlags, ItemFlags} from "../flags.js";
 import {SelectableFlags} from "../widgets/selectable.js";

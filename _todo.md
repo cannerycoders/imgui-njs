@@ -45,11 +45,17 @@
 * numerical expression "picker"
 * hue wheel
 
-#### performace
+#### performance
 
 * lazy render:
     * dirty display tracking
 * don't need to clip on entire canvas?
+
+
+#### deployment
+
+* need to evaluate whether a cdn or alternate deployment/packaging
+  scheme is worth the trouble.
 
 ### bugs
 
