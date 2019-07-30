@@ -31,10 +31,11 @@ export default class ImguiApp
             alert("Can't find canvas element named AppCanvas");
             return;
         }
-        this.imgui = new Imgui(this.canvas, this.appname);
-        this.FileBrowser = new FileBrowser(this.filesystem, this.prefs); // Begin below
-        this.Log = new Log(this.imgui);
+        this.imgui = null;
+        this.FileBrowser = null;
+        this.Log = null;
         this.showLog = new ValRef(false);
+
     }
 
     GetName()
@@ -69,12 +70,15 @@ export default class ImguiApp
     {
         if(!this.canvas) return;
         this.imgui = new Imgui(this.canvas, this.appname);
+        this.imgui.guictx.SettingsHandlers.push(this.prefs);
+        this.imgui.LoadIniSettingsFromDisk();
+        this.Log = new Log(this.imgui);
+        this.FileBrowser = new FileBrowser(this.filesystem, this.prefs); // Begin below
+        this.FileBrowser.Begin(this.imgui);
+
         console.info(`${this.appname} Begin ${new Date().toLocaleString()}`);
         console.info(`  version: ${this.version}`);
         console.info(`  ${this.imgui.GetVersion()}`);
-        this.imgui.guictx.SettingsHandlers.push(this.prefs);
-        this.imgui.LoadIniSettingsFromDisk();
-        this.FileBrowser.Begin(this.imgui);
         onReady(0);
     }
 

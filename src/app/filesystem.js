@@ -21,21 +21,26 @@ export class FileSystem
         let self = this;
         if(runtime == "browser")
         {
-            console.info("Installing BrowserFS");
-            this.fs = BrowserFS.BFSRequire("fs");
-            this.path = BrowserFS.BFSRequire("path");
-            BrowserFS.FileSystem.IndexedDB.Create(function(e, lsfs) {
-                BrowserFS.FileSystem.XmlHttpRequest.Create(function(e, http) {
-                    BrowserFS.FileSystem.MountableFileSystem.Create({
-                        "/home": lsfs,
-                        "/net": http
-                    }, function(e, mfs) {
-                        BrowserFS.initialize(mfs);
-                        // BFS is now ready to use!
-                        self.oninit();
+            if(window.BrowserFS != undefined)
+            {
+                console.info("Installing BrowserFS");
+                this.fs = BrowserFS.BFSRequire("fs");
+                this.path = BrowserFS.BFSRequire("path");
+                BrowserFS.FileSystem.IndexedDB.Create(function(e, lsfs) {
+                    BrowserFS.FileSystem.XmlHttpRequest.Create(function(e, http) {
+                        BrowserFS.FileSystem.MountableFileSystem.Create({
+                            "/home": lsfs,
+                            "/net": http
+                        }, function(e, mfs) {
+                            BrowserFS.initialize(mfs);
+                            // BFS is now ready to use!
+                            self.oninit();
+                        });
                     });
                 });
-            });
+            }
+            else
+                console.warn("No file-IO in browser mode");
         }
         else
         {

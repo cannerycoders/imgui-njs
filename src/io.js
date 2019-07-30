@@ -318,9 +318,12 @@ export class IO
              *   whether the user has pressed a key, use the onkeydown event
              *   instead, because it works for all keys.
              */
-            canvas.addEventListener("keydown", this.onKeyDown.bind(this));
-            canvas.addEventListener("keyup", this.onKeyUp.bind(this));
-            canvas.addEventListener("keypress", this.onKeyPress.bind(this));
+            /* NB: we intercept entire window of events to de-confuse
+             *  DOM-focus and imgui-focus
+             */
+            window.addEventListener("keydown", this.onKeyDown.bind(this));
+            window.addEventListener("keyup", this.onKeyUp.bind(this));
+            window.addEventListener("keypress", this.onKeyPress.bind(this));
 
             canvas.addEventListener("pointermove", this.onPointerMove.bind(this));
             canvas.addEventListener("pointerdown", this.onPointerDown.bind(this));
@@ -603,10 +606,13 @@ export class IO
         //  1. Control
         //  2. o (control-key still down)
         // if control/meta/alt isn't down, then keypress is invoked
+        // console.info(`key down: ${evt.keyCode}, ${evt.key}, ${evt.timeStamp}`);
         if(this.MetaKeys[evt.key] == undefined)
         {
-            // console.debug(`reg-key: ${evt.keyCode}, ${evt.key}`);
+            // not a meta key
             this.InputKeyEvents.push(evt);
+            // ClearInputCharacters called during imgui.EndFrame(0)
+
             // since we defer delivery of events, we can't leave it to
             // client to invoke evt.preventDefault.  There is a knob,
             //  WantCaptureKeyboard (invoked vrom )
