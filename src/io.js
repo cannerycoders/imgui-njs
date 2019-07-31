@@ -297,6 +297,7 @@ export class IO
                                     this.onGamepadDisconnected.bind(this));
             // prevent browser context menu
             window.oncontextmenu = function() { return false; };
+
         }
 
         if (canvas !== null)
@@ -318,18 +319,18 @@ export class IO
              *   whether the user has pressed a key, use the onkeydown event
              *   instead, because it works for all keys.
              */
-            /* NB: we intercept entire window of events to de-confuse
-             *  DOM-focus and imgui-focus
+            // https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md
+            /* NB: only listen to canvas keyboard and mouse events to support
+             *  mixed-mode DOM operation (as with AceEditor).
              */
-            window.addEventListener("keydown", this.onKeyDown.bind(this));
-            window.addEventListener("keyup", this.onKeyUp.bind(this));
-            window.addEventListener("keypress", this.onKeyPress.bind(this));
+            canvas.addEventListener("keydown", this.onKeyDown.bind(this));
+            canvas.addEventListener("keyup", this.onKeyUp.bind(this));
+            canvas.addEventListener("keypress", this.onKeyPress.bind(this));
 
             canvas.addEventListener("pointermove", this.onPointerMove.bind(this));
             canvas.addEventListener("pointerdown", this.onPointerDown.bind(this));
             canvas.addEventListener("pointerup", this.onPointerUp.bind(this));
-            canvas.addEventListener("contextmenu", this.onContextMenu.bind(this));
-            // https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md
+
             canvas.addEventListener("wheel", this.onWheel.bind(this),
                     {passive: true});
         }
@@ -478,15 +479,16 @@ export class IO
     {
         if (this.canvas)
         {
-            this.canvas.removeEventListener("blur", this.onBlur.bind(this));
-            this.canvas.removeEventListener("keydown", this.onKeyDown.bind(this));
-            this.canvas.removeEventListener("keyup", this.onKeyUp.bind(this));
-            this.canvas.removeEventListener("keypress", this.onKeyPress.bind(this));
-            this.canvas.removeEventListener("pointermove", this.onPointerMove.bind(this));
-            this.canvas.removeEventListener("pointerdown", this.onPointerDown.bind(this));
-            this.canvas.removeEventListener("contextmenu", this.onContextMenu.bind(this));
-            this.canvas.removeEventListener("pointerup", this.onPointerUp.bind(this));
-            this.canvas.removeEventListener("wheel", this.onWheel.bind(this));
+            let c = this.canvas;
+            c.removeEventListener("blur", this.onBlur.bind(this));
+            c.removeEventListener("keydown", this.onKeyDown.bind(this));
+            c.removeEventListener("pointerup", this.onPointerUp.bind(this));
+            c.removeEventListener("wheel", this.onWheel.bind(this));
+            c.removeEventListener("keyup", this.onKeyUp.bind(this));
+            c.removeEventListener("keypress", this.onKeyPress.bind(this));
+            c.removeEventListener("pointermove", this.onPointerMove.bind(this));
+            c.removeEventListener("pointerdown", this.onPointerDown.bind(this));
+            c.removeEventListener("contextmenu", this.onContextMenu.bind(this));
         }
 
         if (typeof(window) !== "undefined")
@@ -677,6 +679,7 @@ export class IO
 
     onPointerDown(evt/*pointerEvent*/)
     {
+        this.canvas.focus();
         this.MousePos.x = evt.offsetX;
         this.MousePos.y = evt.offsetY;
         this.MouseDown[this.MouseButtonMap[evt.button]] = true;
