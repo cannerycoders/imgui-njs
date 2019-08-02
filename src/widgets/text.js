@@ -56,11 +56,11 @@ export class TextFilter
         this.regexpErr = null;
     }
 
-    Draw(label = "Filter", width=0)
+    Draw(label = "Filter", width=0, flags=0)
     {
         if (width != 0)
             this.imgui.PushItemWidth(width);
-        let value_changed = this.imgui.InputText(label, this.filter);
+        let value_changed = this.imgui.InputText(label, this.filter, flags);
         if (width != 0)
             this.imgui.PopItemWidth();
         if(value_changed)
@@ -82,8 +82,7 @@ export class TextFilter
             const style = this.imgui.guictx.Style;
             this.imgui.SameLine();
             this.imgui.PushFont(style.GetFont("Small"));
-            this.imgui.TextColored(style.GetColor("TextError"),
-                                    this.regexpErr);
+            this.imgui.TextColored(style.GetColor("TextError"), this.regexpErr);
             this.imgui.PopFont();
         }
         return value_changed;
@@ -98,7 +97,17 @@ export class TextFilter
     {
         if(this.filter.Length() > 0 && this.regexp)
         {
-            return  this.regexp.test(input);
+            if(!Array.isArray(input))
+                return this.regexp.test(input);
+            else
+            {
+                for(let str of input)
+                {
+                    if(this.regexp.test(str))
+                        return true;
+                }
+            }
+            return false;
         }
         else
             return true;
