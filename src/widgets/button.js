@@ -703,17 +703,24 @@ export var ImguiButtonMixin =
         }
     },
 
-    getImage(url)
+    getImage(url, onerror=null)
     {
         if(!this.imageCache)
             this.imageCache = {};
-        let img = this.imageCache[url];
+        let cache = this.imageCache;
+        let img = cache[url];
         if(img == undefined)
         {
             img = new Image();
-            this.imageCache[url] = img;
+            cache[url] = img;
             img.addEventListener("load", function() {
                 img._loaded = true;
+            });
+            img.addEventListener("error", function() {
+                img._loaded = false;
+                img._error = true;
+                if(onerror)
+                    onerror(url, cache);
             });
             img.src = url;
             return null;
@@ -723,12 +730,16 @@ export var ImguiButtonMixin =
         {
             return img;
         }
+        if(img._error)
+        {
+            return this.getImage("/img/404.png");
+        }
         else
             return null;
     },
 
     Image(url, size, uv0=null, uv1=null, tint_col=null,
-            border_col=null, bg_col = null)
+            border_col=null, bg_col = null, onError=null)
     {
         let win = this.getCurrentWindow();
         let bb = new Rect(win.DC.CursorPos,
@@ -738,7 +749,7 @@ export var ImguiButtonMixin =
         this.itemSize(bb);
         if (!this.itemAdd(bb, 0))
             return;
-        let img = this.getImage(url);
+        let img = this.getImage(url, onError);
         if(bg_col != null && bg_col.a > 0)
             win.DrawList.AddRectFilled(bb.Min, bb.Max, bg_col, 0);
         if (border_col != null && border_col.a > 0)

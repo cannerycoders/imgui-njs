@@ -1,4 +1,4 @@
-/* global BrowserFS, navigator */
+/* global BrowserFS */
 // see:
 // https://github.com/jvilk/BrowserFS
 // https://jvilk.com/browserfs/2.0.0-beta/index.html

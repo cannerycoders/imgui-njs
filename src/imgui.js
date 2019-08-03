@@ -16,7 +16,10 @@ import {ImguiMixins} from "./mixins.js";
  */
 export class Imgui extends ImguiMixins
 {
-    constructor(canvas, appname="imgui-njs")
+    // we require a subset of 'navigator' interface: 
+    //      platform, 
+    //      clipboard.writeText, clipboard.readText
+    constructor(canvas, appname="imgui-njs", appServices=navigator)
     {
         super();
         this.debug = true;
@@ -27,6 +30,7 @@ export class Imgui extends ImguiMixins
         this.about = `imgui-njs: ${this.version}, dear-imgui: ${this.version_imgui}`;
         this.canvas = canvas;
         this.guictx = new GuiContext(this, canvas, appname);
+        this.appServices = appServices; 
         this.Initialized = true;
     }
 
@@ -1571,23 +1575,21 @@ export class Imgui extends ImguiMixins
     }
 
     // Clipboard Utilities -------------------------------------
-    //  (also see the LogToClipboard() function to capture or output
-    //   text data to the clipboard)
-    async GetClipboardText()
+    // Clipboard is async and subject to "PermissionsAPI"
+    async GetClipboardText(cb)
     {
-        try
+        this.appServices.clipboard.readText().then((txt) => 
         {
-            return await navigator.clipboard.readText();
-        }
-        catch (err)
+            cb(txt);
+        }).catch((err) => 
         {
-            console.error("Failed to read clipboard contents: ", err);
-        }
+            console.error("failed to read from clipboard: " + err);
+        });
     }
 
     SetClipboardText(tx)
     {
-       navigator.clipboard.writeText(tx).then(
+        this.appServices.clipboard.writeText(tx).then(
            ()=>{},
            ()=>console.warn("clipboard write error"));
     }

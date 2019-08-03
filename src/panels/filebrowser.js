@@ -57,10 +57,12 @@ export class FileBrowser
         this.icons = icons;
         this.zIndex = -1;
         this.recentDirs = []; // whether or not we have prefs support
+        this.imgui = null;
     }
 
     Begin(imgui)
     {
+        this.imgui = imgui;
     }
 
     SetDir(dir) // Async
@@ -576,7 +578,7 @@ export class FileBrowser
 
     listVolumes(cb)
     {
-        if(navigator.platform.indexOf("Win32") == -1)
+        if(this.imgui.appServices.platform.indexOf("Win32") == -1)
         {
             let opts = {withFileTypes: true};
             this.filesys.readdir(this.cwd, opts, cb);
