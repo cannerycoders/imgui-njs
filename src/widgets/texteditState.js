@@ -1,5 +1,3 @@
-import {Vec2} from "../types.js";
-
 // Support for editable text.
 //  - only instantiate one TextEdit object for each window. Reused according
 //    to window focus.
@@ -122,8 +120,6 @@ class UndoRecord
         this.op |= UndoOp.DoneFlag;
     }
 }
-
-const UndoStateCount = 99;
 
 // UndoMgr tracks the state of done, undoable, redoable:
 //  * text edit operations push new UndoRecords on the Deque.

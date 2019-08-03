@@ -273,9 +273,9 @@ export class IO
             // ImGui.LoadIniSettingsFromMemory(window.localStorage.getItem("imgui.ini") || "");
         }
 
-        if (typeof(navigator) !== "undefined")
+        if (typeof(this.imgui.appServices) !== "undefined")
         {
-            this.ConfigMacOSXBehaviors = navigator.platform.match(/Mac/) !== null;
+            this.ConfigMacOSXBehaviors = this.imgui.appServices.platform.match(/Mac/) !== null;
         }
 
         if (typeof(document) !== "undefined")
@@ -626,7 +626,7 @@ export class IO
     // this is a matter of policy, perhaps user-configuration required?
     isSystemEvent(evt)
     {
-        if(navigator.platform.indexOf("Mac") != -1)
+        if(this.imgui.appServices.platform.indexOf("Mac") != -1)
         {
             // cmd-alt-j
             if(evt.metaKey && evt.altKey &&
@@ -715,32 +715,6 @@ export class IO
         // no-op to prevent system menu
     }
 
-    setClipboardTextFn(userdata, text)
-    {
-        this.Clipboardtext = text;
-        // console.log(`set clipboardtext: "${clipboardtext}"`);
-        if (typeof navigator !== "undefined" &&
-            typeof navigator.clipboard !== "undefined")
-        {
-            // console.log(`clipboard.writeText: "${clipboardtext}"`);
-            navigator.clipboard.writeText(this.clipboardtext).then(() => {
-                    // console.log(`clipboard.writeText: "${clipboardtext}" done.`);
-                });
-        }
-    }
-
-    getClipboardTextFn (userdata)
-    {
-        // if (typeof navigator !== "undefined" && typeof (navigator as any).clipboard !== "undefined") {
-        //     console.log(`clipboard.readText: "${clipboardtext}"`);
-        //     (navigator as any).clipboard.readText().then((text: string): void => {
-        //         clipboardtext = text;
-        //         console.log(`clipboard.readText: "${clipboardtext}" done.`);
-        //     });
-        // }
-        // console.log(`get clipboardtext: "${clipboardtext}"`);
-        return this.Clipboardtext;
-    }
 } // end of class IO
 
 export default IO;

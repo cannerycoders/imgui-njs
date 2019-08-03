@@ -81,6 +81,7 @@ export class Font
     MeasureText(text, wrapWidth, lineHeight, sz)
     {
         let lines = [];
+        if(!text) text = "";
         if(this.measuring == 0)
         {
             this.ctx.save();

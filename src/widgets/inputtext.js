@@ -118,6 +118,11 @@ export class InputTextState // NB: contains TextEditState
         this.EditState.ClampCursor(this.Text);
     }
 
+    Paste(pasteTxt)
+    {
+        this.EditState.Paste(this.Text, pasteTxt);
+    }
+
     HasSelection()
     {
         return this.EditState.HasSelection();
@@ -909,12 +914,9 @@ export var ImguiInputMixin =
             if (is_cut || is_copy)
             {
                 // Cut, Copy
-                if (io.SetClipboardTextFn)
-                {
-                    const selTxt = state.GetSelectdText();
-                    if(selTxt != null)
-                        this.SetClipboardText(selTxt);
-                }
+                const selTxt = state.GetSelectdText();
+                if(selTxt != null)
+                    this.SetClipboardText(selTxt);
                 if (is_cut)
                 {
                     if (!state.HasSelection())
@@ -926,9 +928,15 @@ export var ImguiInputMixin =
             else
             if (is_paste)
             {
-                let clipboard = this.GetClipboardText();
-                if (clipboard)
+                // NB: GetClipboardText is async
+                this.GetClipboardText((clipboard) =>
                 {
+                    if (!clipboard || !clipboard.length)
+                    {
+                        console.debug("empty clipboard");
+                        return;
+                    }
+
                     // Filter pasted buffer
                     let clipFiltered = [];
                     for(let i=0;i<clipboard.length;i++)
@@ -951,7 +959,7 @@ export var ImguiInputMixin =
                         state.Paste(clipFiltered);
                         state.CursorFollow = true;
                     }
-                }
+                });
             }
 
             // Update render selection flag after events have been handled, so

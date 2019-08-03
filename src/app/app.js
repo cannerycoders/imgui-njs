@@ -36,6 +36,10 @@ export default class ImguiApp
         this.Log = null;
         this.showLog = new ValRef(false);
 
+        // appServices protocol used by imgui, navigator.clipboard doesn't
+        // work in the electron environment.
+        this.platform = navigator.platform;
+        this.clipboard = navigator.clipboard;
     }
 
     GetName()
@@ -69,7 +73,7 @@ export default class ImguiApp
     Begin(onReady) // onReady: cuz begin takes triggers async loading
     {
         if(!this.canvas) return;
-        this.imgui = new Imgui(this.canvas, this.appname);
+        this.imgui = new Imgui(this.canvas, this.appname, this);
         this.imgui.guictx.SettingsHandlers.push(this.prefs);
         this.imgui.LoadIniSettingsFromDisk();
         this.Log = new Log(this.imgui);
