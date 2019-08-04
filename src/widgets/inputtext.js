@@ -914,7 +914,7 @@ export var ImguiInputMixin =
             if (is_cut || is_copy)
             {
                 // Cut, Copy
-                const selTxt = state.GetSelectdText();
+                const selTxt = state.GetSelectedText();
                 if(selTxt != null)
                     this.SetClipboardText(selTxt);
                 if (is_cut)
@@ -1356,7 +1356,7 @@ export var ImguiInputMixin =
                                 this.calcTextLineCount(val_display)*g.FontLineHeight);
             }
             else
-                val_display_length = str.length;
+                val_display_length = str ? str.length : 0;
 
             if (is_multiline || val_display_length < MaxDisplayLength)
             {
