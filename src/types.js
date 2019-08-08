@@ -87,10 +87,10 @@ export class Vec2
         return new Vec2(this.x, this.y);
     }
 
-    Copy(other)
+    Copy(src)
     {
-        this.x = other.x;
-        this.y = other.y;
+        this.x = src.x;
+        this.y = src.y;
     }
 
     CopyXY(x, y)
@@ -368,6 +368,12 @@ export class Rect
     Clone()
     {
         return Rect.FromRect(this);
+    }
+
+    Copy(src)
+    {
+        this.Min.Copy(src.Min);
+        this.Max.Copy(src.Max);
     }
 
     IsNaN()

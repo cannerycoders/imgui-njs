@@ -310,22 +310,6 @@ export var ImguiMiscMixin =
         return true;
     },
 
-    isClippedEx(bb, id, clip_even_when_logged)
-    {
-        let g = this.guictx;
-        let win = g.CurrentWindow;
-        if (!bb.Overlaps(win.ClipRect))
-        {
-            if (id == 0 || id != g.ActiveId)
-            {
-                if (clip_even_when_logged || !g.LogEnabled)
-                    return true;
-            }
-        }
-        return false;
-
-    },
-
     // Process TAB/Shift+TAB. Be mindful that this function may _clear_
     // the ActiveID when tabbing out.
     // Return true if focus is requested

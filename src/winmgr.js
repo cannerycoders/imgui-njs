@@ -1292,6 +1292,11 @@ export var ImguiWinMgrMixin =
         return this.GetContentRegionAvail().x;
     },
 
+    GetContentRegionAvailHeight()
+    {
+        return this.GetContentRegionAvail().y;
+    },
+
     GetWindowContentRegionMin()
     {
         let win = this.guictx.CurrentWindow;
@@ -1312,6 +1317,12 @@ export var ImguiWinMgrMixin =
     {
         let win = this.guictx.CurrentWindow;
         return win.ContentsRegionRect.GetWidth();
+    },
+
+    GetWindowContentRegionHeight()
+    {
+        let win = this.guictx.CurrentWindow;
+        return win.ContentsRegionRect.GetHeight();
     },
 
     /**

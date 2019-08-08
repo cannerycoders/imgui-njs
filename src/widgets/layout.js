@@ -108,6 +108,16 @@ export var ImguiLayoutMixin =
         this.itemAdd(bb, 0);
     },
 
+    ItemWouldBeClipped(size)
+    {
+        let win = this.getCurrentWindow();
+        if (win.SkipItems)
+            return false;
+        let bb = new Rect(win.DC.CursorPos,
+                        Vec2.Add(win.DC.CursorPos, size));
+        return this.bboxIsClipped(bb);
+    },
+
     // undo a SameLine() or force a new line when in an horizontal-layout context.
     NewLine()
     {
@@ -554,7 +564,7 @@ export var ImguiLayoutMixin =
         }
 
         win.DC.LastItemId = id;
-        win.DC.LastItemRect = bb.Clone();
+        win.DC.LastItemRect.Copy(bb);
         win.DC.LastItemStatusFlags = ItemStatusFlags.None;
 
         // Clipping test
@@ -570,5 +580,24 @@ export var ImguiLayoutMixin =
         return true;
     },
 
+    isClippedEx(bb, id=0, clip_even_when_logged=false)
+    {
+        let g = this.guictx;
+        let win = g.CurrentWindow;
+        if (!bb.Overlaps(win.ClipRect))
+        {
+            if (id == 0 || id != g.ActiveId)
+            {
+                if (clip_even_when_logged || !g.LogEnabled)
+                    return true;
+            }
+        }
+        return false;
+    },
+
+    bboxIsClipped(bb)
+    {
+        return this.isClippedEx(bb, 0, false);
+    }
 
 }; // end mixin
