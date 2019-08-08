@@ -767,7 +767,7 @@ export var ImguiButtonMixin =
     },
 
     ImageButton(url, size, uv0=null, uv1=null, frame_padding=0,
-                bg_col=null, tint_col=null)
+                bg_col=null, tint_col=null, onError=null)
     {
         let win = this.getCurrentWindow();
         if (win.SkipItems)
@@ -799,13 +799,13 @@ export var ImguiButtonMixin =
         let pressed = this.ButtonBehavior(bb, id, hovered, held);
 
         // Render
-        let img = this.getImage(url);
+        let img = this.getImage(url, onError);
         const col = style.GetColor((held.get() && hovered.get()) ? "ButtonActive" :
                                     hovered.get() ? "ButtonHovered" : "Button");
         this.renderNavHighlight(bb, id);
         this.renderFrame(bb.Min, bb.Max, col, true,
             Vec1.Clamp(Math.min(padding.x, padding.y), 0, style.FrameRounding));
-        if (bg_col.w > 0)
+        if (bg_col && bg_col.w > 0)
             win.DrawList.AddRectFilled(image_bb.Min, image_bb.Max, bg_col);
         if(img)
             win.DrawList.AddImage(img, image_bb, uv0, uv1, tint_col);

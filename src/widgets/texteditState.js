@@ -319,6 +319,13 @@ export class TextEditState
         return this.SelectStart != this.SelectEnd;
     }
 
+    GetSelectedText(str)
+    {
+        if(!this.HasSelection()) return null;
+        this.sortSelection();
+        return str.GetChars(this.SelectStart, this.SelectEnd-this.SelectStart);
+    }
+
     ClearSelection()
     {
         this.SelectStart = this.SelectEnd = 0;
@@ -1029,7 +1036,7 @@ export class TextEditState
         }
     }
 
-    // canoncialize the selection so start <= end
+    // canonicalize the selection so start <= end
     sortSelection()
     {
         if (this.SelectEnd < this.SelectStart)

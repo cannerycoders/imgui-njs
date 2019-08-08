@@ -118,6 +118,11 @@ export class InputTextState // NB: contains TextEditState
         this.EditState.ClampCursor(this.Text);
     }
 
+    Cut()
+    {
+        this.EditState.Cut(this.Text);
+    }
+
     Paste(pasteTxt)
     {
         this.EditState.Paste(this.Text, pasteTxt);
@@ -126,6 +131,11 @@ export class InputTextState // NB: contains TextEditState
     HasSelection()
     {
         return this.EditState.HasSelection();
+    }
+
+    GetSelectedText()
+    {
+        return this.EditState.GetSelectedText(this.Text);
     }
 
     ClearSelection()
@@ -544,9 +554,9 @@ export var ImguiInputMixin =
         }
 
         // NB: we are only allowed to access 'edit_state' if we are the active widget.
-        let state = null;
+        let istate = null;
         if (g.InputTextState.ID == id)
-            state = g.InputTextState;
+            istate = g.InputTextState;
 
         const focus_requested = this.focusableItemRegister(win, id);
         const focus_requested_by_code = focus_requested &&
@@ -559,9 +569,9 @@ export var ImguiInputMixin =
                                       ((g.NavInputId == id) ||
                                         (g.NavActivateId == id &&
                                          g.NavInputSource == InputSource.NavKeyboard));
-        const user_scroll_finish = is_multiline && state != null && g.ActiveId == 0 &&
+        const user_scroll_finish = is_multiline && istate != null && g.ActiveId == 0 &&
                 g.ActiveIdPreviousFrame == this.getScrollbarID(draw_window, Axis.Y);
-        const user_scroll_active = is_multiline && state != null &&
+        const user_scroll_active = is_multiline && istate != null &&
                     g.ActiveId == this.getScrollbarID(draw_window, Axis.Y);
 
         let clear_active_id = false;
@@ -575,41 +585,41 @@ export var ImguiInputMixin =
         if (init_state && g.ActiveId != id)
         {
             // Access state even if we don't own it yet.
-            state = g.InputTextState;
-            state.CursorAnimReset();
+            istate = g.InputTextState;
+            istate.CursorAnimReset();
 
             // Take a copy of the initial value. From the moment we focused we are
             // ignoring the content of 'buf' (unless we are in read-only mode)
-            state.InitText(val);
+            istate.InitText(val);
 
             // Preserve cursor position and undo/redo stack if we come back to
             // same widget FIXME: For non-readonly widgets we might be able to
             // require that TextIsValid && Text == val ? (untested) and
             // discard undo stack if user buffer has changed.
-            const recycle_state = (state.ID == id);
+            const recycle_state = (istate.ID == id);
             if (recycle_state)
             {
                 // Recycle existing cursor/selection/undo stack but clamp position
                 // Note a single mouse click will override the cursor/position
                 // immediately by calling stb_textedit_click handler.
-                state.CursorClamp();
+                istate.CursorClamp();
             }
             else
             {
-                state.ID = id;
-                state.ScrollX = 0;
-                state.InitTextEdit(!is_multiline);
+                istate.ID = id;
+                istate.ScrollX = 0;
+                istate.InitTextEdit(!is_multiline);
                 if (!is_multiline && focus_requested_by_code)
                     select_all = true;
             }
-            state.EditState.InsertMode = (flags & InputTextFlags.AlwaysInsertMode);
+            istate.EditState.InsertMode = (flags & InputTextFlags.AlwaysInsertMode);
             if (!is_multiline && (focus_requested_by_tab || (user_clicked && io.KeyCtrl)))
                 select_all = true;
         }
 
         if (g.ActiveId != id && init_make_active)
         {
-            console.assert(state && state.ID == id);
+            console.assert(istate && istate.ID == id);
             this.setActiveID(id, win);
             this.setFocusID(id, win);
             this.FocusWindow(win);
@@ -627,7 +637,7 @@ export var ImguiInputMixin =
         // We have an edge case if ActiveId was set through another widget (e.g.
         // widget being swapped), clear id immediately (don't wait until the end
         // of the function)
-        if (g.ActiveId == id && state == null)
+        if (g.ActiveId == id && istate == null)
             this.clearActiveID();
 
         // Release focus when we click outside
@@ -636,8 +646,8 @@ export var ImguiInputMixin =
 
         // Lock the decision of whether we are going to take the path displaying
         // the cursor or selection
-        const render_cursor = (g.ActiveId == id) || (state && user_scroll_active);
-        let render_selection = state && state.HasSelection() &&
+        const render_cursor = (g.ActiveId == id) || (istate && user_scroll_active);
+        let render_selection = istate && istate.HasSelection() &&
                                (RENDER_SELECTION_WHEN_INACTIVE || render_cursor);
         let value_changed = false;
         let enter_pressed = false;
@@ -645,21 +655,21 @@ export var ImguiInputMixin =
         // When read-only we always use the live data passed to the function
         // FIXME-OPT: Because our selection/cursor code currently needs the
         // wide text we need to convert it when active, which is not ideal :(
-        if (is_readonly && state != null && (render_cursor || render_selection))
+        if (is_readonly && istate != null && (render_cursor || render_selection))
         {
-            state.SetText(val);
-            state.CursorClamp();
-            render_selection &= state.HasSelection();
+            istate.SetText(val);
+            istate.CursorClamp();
+            render_selection &= istate.HasSelection();
         }
 
         // Select the buffer to render.
         const val_display_from_state = (render_cursor || render_selection ||
-                    g.ActiveId == id) && !is_readonly && state && state.TextIsValid;
+                    g.ActiveId == id) && !is_readonly && istate && istate.TextIsValid;
         let is_displaying_hint = false;
         if(hint != null)
         {
             if(val_display_from_state)
-                is_displaying_hint = (state.Text.Length() == 0);
+                is_displaying_hint = (istate.Text.Length() == 0);
             else
                 is_displaying_hint = (val.Length() == 0);
         }
@@ -674,10 +684,10 @@ export var ImguiInputMixin =
         // Process mouse inputs and character inputs
         if (g.ActiveId == id)
         {
-            console.assert(state != null);
-            state.UserFlags = flags;
-            state.UserCallback = onEdit;
-            state.UserCallbackData = editData;
+            console.assert(istate != null);
+            istate.UserFlags = flags;
+            istate.UserCallback = onEdit;
+            istate.UserCallbackData = editData;
 
             // Although we are active we don't prevent mouse from hovering other
             // elements unless we are interacting right now with the widget.
@@ -687,42 +697,42 @@ export var ImguiInputMixin =
             g.WantTextInputNextFrame = 1;
 
             // Edit in progress
-            const mouse_x = (io.MousePos.x - frame_bb.Min.x - style.FramePadding.x) + state.ScrollX;
+            const mouse_x = (io.MousePos.x - frame_bb.Min.x - style.FramePadding.x) + istate.ScrollX;
             const mouse_y = is_multiline ? (io.MousePos.y - draw_window.DC.CursorPos.y - style.FramePadding.y)
                                         : (g.FontLineHeight*0.5);
 
             const is_osx = io.ConfigMacOSXBehaviors;
             if (select_all || (hovered && !is_osx && io.MouseDoubleClicked[0]))
             {
-                state.SelectAll();
-                state.SelectedAllMouseLock = true;
+                istate.SelectAll();
+                istate.SelectedAllMouseLock = true;
             }
             else
             if (hovered && is_osx && io.MouseDoubleClicked[0])
             {
                 // Double-click select a word only, OS X style (by simulating keystrokes)
-                state.OnKeyPressed(TextEditMetaKeys.WordLeft);
-                state.OnKeyPressed(TextEditMetaKeys.WordRight | TextEditMetaKeys.Shift);
+                istate.OnKeyPressed(TextEditMetaKeys.WordLeft);
+                istate.OnKeyPressed(TextEditMetaKeys.WordRight | TextEditMetaKeys.Shift);
             }
             else
-            if (io.MouseClicked[0] && !state.SelectedAllMouseLock)
+            if (io.MouseClicked[0] && !istate.SelectedAllMouseLock)
             {
                 if (hovered)
                 {
-                    state.Click(mouse_x, mouse_y);
-                    state.CursorAnimReset();
+                    istate.Click(mouse_x, mouse_y);
+                    istate.CursorAnimReset();
                 }
             }
             else
-            if (io.MouseDown[0] && !state.SelectedAllMouseLock &&
+            if (io.MouseDown[0] && !istate.SelectedAllMouseLock &&
                 (io.MouseDelta.x != 0 || io.MouseDelta.y != 0.))
             {
-                state.Drag(mouse_x, mouse_y);
-                state.CursorAnimReset();
-                state.CursorFollow = true;
+                istate.Drag(mouse_x, mouse_y);
+                istate.CursorAnimReset();
+                istate.CursorFollow = true;
             }
-            if (state.SelectedAllMouseLock && !io.MouseDown[0])
-                state.SelectedAllMouseLock = false;
+            if (istate.SelectedAllMouseLock && !io.MouseDown[0])
+                istate.SelectedAllMouseLock = false;
 
             // It is ill-defined whether the back-end needs to send a \t
             // character when pressing the TAB keys. Win32 and GLFW naturally
@@ -735,7 +745,7 @@ export var ImguiInputMixin =
                 // Insert TAB (XXX?)
                 let c = this.inputTextFilterChar("\t", flags, onEdit, editData);
                 if (c)
-                    state.OnKeyPressed(c.charCodeAt(0));
+                    istate.OnKeyPressed(c.charCodeAt(0));
             }
 
             // Process regular text input (before we check for Return because
@@ -763,7 +773,7 @@ export var ImguiInputMixin =
                         let char = this.inputTextFilterChar(
                                             key, flags, onEdit, editData);
                         if (char)
-                            state.OnKeyPressed(char.charCodeAt(0));
+                            istate.OnKeyPressed(char.charCodeAt(0));
                     }
                 }
                 // Consume all characters, even navkeys.
@@ -775,7 +785,7 @@ export var ImguiInputMixin =
         let cancel_edit = false;
         if (g.ActiveId == id && !g.ActiveIdIsJustActivated && !clear_active_id)
         {
-            console.assert(state != null);
+            console.assert(istate != null);
             const k_mask = (io.KeyShift ? TextEditMetaKeys.Shift : 0);
             const is_osx = io.ConfigMacOSXBehaviors;
             // OS X style: Shortcuts using Cmd/Super instead of Ctrl
@@ -793,10 +803,10 @@ export var ImguiInputMixin =
             const is_cut   = ((is_shortcut_key && this.isKeyPressedMap(Key.X)) ||
                               (is_shift_key_only && this.isKeyPressedMap(Key.Delete)))
                             && !is_readonly && !is_password &&
-                            (!is_multiline || state.HasSelection());
+                            (!is_multiline || istate.HasSelection());
             const is_copy  = ((is_shortcut_key && this.isKeyPressedMap(Key.C)) ||
                             (is_ctrl_key_only  && this.isKeyPressedMap(Key.Insert)))
-                            && !is_password && (!is_multiline || state.HasSelection());
+                            && !is_password && (!is_multiline || istate.HasSelection());
             const is_paste = ((is_shortcut_key && this.isKeyPressedMap(Key.V)) ||
                             (is_shift_key_only && this.isKeyPressedMap(Key.Insert)))
                             && !is_readonly;
@@ -808,14 +818,14 @@ export var ImguiInputMixin =
 
             if (this.isKeyPressedMap(Key.LeftArrow))
             {
-                state.OnKeyPressed((is_startend_key_down ? TextEditMetaKeys.LineStart :
+                istate.OnKeyPressed((is_startend_key_down ? TextEditMetaKeys.LineStart :
                         is_wordmove_key_down ? TextEditMetaKeys.WordLeft :
                         TextEditMetaKeys.Left) | k_mask);
             }
             else
             if (this.isKeyPressedMap(Key.RightArrow))
             {
-                state.OnKeyPressed((is_startend_key_down ?
+                istate.OnKeyPressed((is_startend_key_down ?
                         TextEditMetaKeys.LineEnd : is_wordmove_key_down ?
                         TextEditMetaKeys.WordRight :
                         TextEditMetaKeys.Right) | k_mask);
@@ -826,7 +836,7 @@ export var ImguiInputMixin =
                 if (io.KeyCtrl)
                     draw_window.SetWindowScrollY(Math.max(draw_window.Scroll.y - g.FontLineHeight, 0.));
                 else
-                    state.OnKeyPressed((is_startend_key_down ?
+                    istate.OnKeyPressed((is_startend_key_down ?
                             TextEditMetaKeys.TextStart :
                             TextEditMetaKeys.Up) | k_mask);
             }
@@ -837,43 +847,43 @@ export var ImguiInputMixin =
                     draw_window.SetWindowScrollY(Math.max(draw_window.Scroll.y + g.FontLineHeight,
                                                                 this.GetScrollMaxY()));
                 else
-                    state.OnKeyPressed((is_startend_key_down ?
+                    istate.OnKeyPressed((is_startend_key_down ?
                             TextEditMetaKeys.TextEnd :
                             TextEditMetaKeys.Down) | k_mask);
             }
             else
             if (this.isKeyPressedMap(Key.Home))
             {
-                state.OnKeyPressed(io.KeyCtrl ?
+                istate.OnKeyPressed(io.KeyCtrl ?
                     (TextEditMetaKeys.TextStart | k_mask) :
                     (TextEditMetaKeys.LineStart | k_mask));
             }
             else
             if (this.isKeyPressedMap(Key.End))
             {
-                state.OnKeyPressed(io.KeyCtrl ?
+                istate.OnKeyPressed(io.KeyCtrl ?
                     (TextEditMetaKeys.TextEnd | k_mask) :
                     (TextEditMetaKeys.LineEnd | k_mask));
             }
             else
             if (this.isKeyPressedMap(Key.Delete) && !is_readonly)
             {
-                state.OnKeyPressed(TextEditMetaKeys.Delete | k_mask);
+                istate.OnKeyPressed(TextEditMetaKeys.Delete | k_mask);
             }
             else
             if (this.isKeyPressedMap(Key.Backspace) && !is_readonly)
             {
-                if (!state.HasSelection())
+                if (!istate.HasSelection())
                 {
                     if (is_wordmove_key_down)
-                        state.OnKeyPressed(TextEditMetaKeys.WordLeft|
+                        istate.OnKeyPressed(TextEditMetaKeys.WordLeft|
                                            TextEditMetaKeys.Shift);
                     else
                     if (is_osx && io.KeySuper && !io.KeyAlt && !io.KeyCtrl)
-                        state.OnKeyPressed(TextEditMetaKeys.LineStart|
+                        istate.OnKeyPressed(TextEditMetaKeys.LineStart|
                                            TextEditMetaKeys.Shift);
                 }
-                state.OnKeyPressed(TextEditMetaKeys.Backspace | k_mask);
+                istate.OnKeyPressed(TextEditMetaKeys.Backspace | k_mask);
             }
             else
             if (this.isKeyPressedMap(Key.Enter))
@@ -889,7 +899,7 @@ export var ImguiInputMixin =
                 {
                     let c = this.inputTextFilterChar("\n", flags, onEdit, editData);
                     if(c)
-                        state.OnKeyPressed(c.charCodeAt(0));
+                        istate.OnKeyPressed(c.charCodeAt(0));
                 }
             }
             else
@@ -900,29 +910,29 @@ export var ImguiInputMixin =
             else
             if (is_undo || is_redo)
             {
-                state.OnKeyPressed(is_undo ?
+                istate.OnKeyPressed(is_undo ?
                     TextEditMetaKeys.Undo : TextEditMetaKeys.Redo);
-                state.ClearSelection();
+                istate.ClearSelection();
             }
             else
             if (is_shortcut_key && this.isKeyPressedMap(Key.A))
             {
-                state.SelectAll();
-                state.CursorFollow = true;
+                istate.SelectAll();
+                istate.CursorFollow = true;
             }
             else
             if (is_cut || is_copy)
             {
                 // Cut, Copy
-                const selTxt = state.GetSelectedText();
+                const selTxt = istate.GetSelectedText();
                 if(selTxt != null)
                     this.SetClipboardText(selTxt);
                 if (is_cut)
                 {
-                    if (!state.HasSelection())
-                        state.SelectAll();
-                    state.CursorFollow = true;
-                    state.Cut();
+                    if (!istate.HasSelection())
+                        istate.SelectAll();
+                    istate.CursorFollow = true;
+                    istate.Cut();
                 }
             }
             else
@@ -956,29 +966,29 @@ export var ImguiInputMixin =
                     // If everything was filtered, ignore the pasting operation
                     if (clipFiltered.length > 0)
                     {
-                        state.Paste(clipFiltered);
-                        state.CursorFollow = true;
+                        istate.Paste(clipFiltered);
+                        istate.CursorFollow = true;
                     }
                 });
             }
 
             // Update render selection flag after events have been handled, so
             // selection highlight can be displayed during the same frame.
-            render_selection |= state.HasSelection() &&
+            render_selection |= istate.HasSelection() &&
                             (RENDER_SELECTION_WHEN_INACTIVE || render_cursor);
         }
 
         // Process callbacks and apply result back to user's buffer.
         if (g.ActiveId == id)
         {
-            console.assert(state != null);
+            console.assert(istate != null);
             let apply_new_text = null;
             if (cancel_edit)
             {
                 // Restore initial value. Only return true if restoring to the
                 // initial value changes the current buffer contents.
-                if (!is_readonly && val != state.InitialText)
-                    apply_new_text = state.InitialText;
+                if (!is_readonly && val != istate.InitialText)
+                    apply_new_text = istate.InitialText;
             }
 
             // When using 'ImGuiInputTextFlags_EnterReturnsTrue' as a special
@@ -1002,7 +1012,7 @@ export var ImguiInputMixin =
                 // active, should mark dirty state from the stb_textedit callbacks.
                 if (!is_readonly)
                 {
-                    state.TextIsValid = true;
+                    istate.TextIsValid = true;
                 }
 
                 // User callback
@@ -1049,32 +1059,32 @@ export var ImguiInputMixin =
                         callback_data.UserData = editData;
 
                         callback_data.EventKey = event_key;
-                        callback_data.Text = state.Text;
+                        callback_data.Text = istate.Text;
                         callback_data.TextDirty = false;
 
-                        callback_data.CursorPos = state.EditState.Cursor;
-                        callback_data.SelectionStart = state.EditState.SelectionStart;
-                        callback_data.SelectionEnd = state.EditState.SelectionEnd;
+                        callback_data.CursorPos = istate.EditState.Cursor;
+                        callback_data.SelectionStart = istate.EditState.SelectionStart;
+                        callback_data.SelectionEnd = istate.EditState.SelectionEnd;
 
                         // Call user code
                         onEdit(callback_data);
 
                         // Read back what user may have modified
                         console.assert(callback_data.Flags == flags);
-                        state.EditState.Cursor = callback_data.CursorPos;
-                        state.EditState.SelectionStart = callback_data.SelectionStart;
-                        state.EditState.SelectionEnd = callback_data.SelectionEnd;
+                        istate.EditState.Cursor = callback_data.CursorPos;
+                        istate.EditState.SelectionStart = callback_data.SelectionStart;
+                        istate.EditState.SelectionEnd = callback_data.SelectionEnd;
                         if (callback_data.TextDirty)
                         {
-                            state.CursorAnimReset();
+                            istate.CursorAnimReset();
                         }
                     }
                 }
 
                 // Will copy result string if modified
-                if (!is_readonly && !state.Text.Equals(val))
+                if (!is_readonly && !istate.Text.Equals(val))
                 {
-                    apply_new_text = state.Text;
+                    apply_new_text = istate.Text;
                 }
             }
 
@@ -1088,9 +1098,9 @@ export var ImguiInputMixin =
             }
 
             // Clear temporary user storage
-            state.UserFlags = 0;
-            state.UserCallback = null;
-            state.UserCallbackData = null;
+            istate.UserFlags = 0;
+            istate.UserCallback = null;
+            istate.UserCallbackData = null;
         }
 
         // Release active ID at the end of the function (so e.g. pressing
@@ -1115,7 +1125,7 @@ export var ImguiInputMixin =
         let text_size = Vec2.Zero();
 
         // val_display can either be str or MutableString
-        let val_display = val_display_from_state ? state.Text : val; //-V595
+        let val_display = val_display_from_state ? istate.Text : val; //-V595
         let val_display_length=0;
         if (is_displaying_hint)
         {
@@ -1127,7 +1137,7 @@ export var ImguiInputMixin =
         // to keep rendering selection when inactive.
         if (render_cursor || render_selection)
         {
-            console.assert(state != null);
+            console.assert(istate != null);
 
             // Render text (with cursor and selection)
             // This is going to be messy. We need to:
@@ -1152,14 +1162,14 @@ export var ImguiInputMixin =
                 let searches_remaining = 0;
                 if (render_cursor)
                 {
-                    searches_input_offset[0] = state.EditState.Cursor;
+                    searches_input_offset[0] = istate.EditState.Cursor;
                     searches_result_line_no[0] = -1;
                     searches_remaining++;
                 }
                 if (render_selection)
                 {
-                    searches_input_offset[1] = Math.min(state.EditState.SelectStart,
-                                                     state.EditState.SelectEnd);
+                    searches_input_offset[1] = Math.min(istate.EditState.SelectStart,
+                                                     istate.EditState.SelectEnd);
                     searches_result_line_no[1] = -1;
                     searches_remaining++;
                 }
@@ -1169,9 +1179,9 @@ export var ImguiInputMixin =
                 // are counted, so add one extra to the searches_remaining counter.
                 searches_remaining += is_multiline ? 1 : 0;
                 let line_count = 0;
-                for (let i=0;i<state.Text.Length();i++)
+                for (let i=0;i<istate.Text.Length();i++)
                 {
-                    if (state.Text.IsNewline(i))
+                    if (istate.Text.IsNewline(i))
                     {
                         line_count++;
                         if (searches_result_line_no[0] == -1 &&
@@ -1198,14 +1208,14 @@ export var ImguiInputMixin =
 
                 // Calculate 2d position by finding the beginning of the line
                 // and measuring distance
-                let lineBegin = state.Text.FindLineBegin(searches_input_offset[0]);
-                cursor_offset.x = state.EditState.CalcTextRunSize(state.Text, lineBegin,
+                let lineBegin = istate.Text.FindLineBegin(searches_input_offset[0]);
+                cursor_offset.x = istate.EditState.CalcTextRunSize(istate.Text, lineBegin,
                                                 searches_input_offset[0], true).x;
                 cursor_offset.y = searches_result_line_no[0] * g.FontLineHeight;
                 if (searches_result_line_no[1] >= 0)
                 {
-                    lineBegin = state.Text.FindLineBegin(searches_input_offset[1]);
-                    select_start_offset.x = state.EditState.CalcTextRunSize(state.Text,
+                    lineBegin = istate.Text.FindLineBegin(searches_input_offset[1]);
+                    select_start_offset.x = istate.EditState.CalcTextRunSize(istate.Text,
                                                 lineBegin, searches_input_offset[1],
                                                 true).x;
                    select_start_offset.y = searches_result_line_no[1] * g.FontLineHeight;
@@ -1218,21 +1228,21 @@ export var ImguiInputMixin =
             }
 
             // Scroll
-            if (render_cursor && state.CursorFollow)
+            if (render_cursor && istate.CursorFollow)
             {
                 // Horizontal scroll in chunks of quarter width
                 if (!(flags & InputTextFlags.NoHorizontalScroll))
                 {
                     const scroll_increment_x = size.x * 0.25;
-                    if (cursor_offset.x < state.ScrollX)
-                        state.ScrollX = Math.floor(Math.max(0, cursor_offset.x - scroll_increment_x));
+                    if (cursor_offset.x < istate.ScrollX)
+                        istate.ScrollX = Math.floor(Math.max(0, cursor_offset.x - scroll_increment_x));
                     else
-                    if (cursor_offset.x - size.x >= state.ScrollX)
-                        state.ScrollX = Math.floor(cursor_offset.x - size.x + scroll_increment_x);
+                    if (cursor_offset.x - size.x >= istate.ScrollX)
+                        istate.ScrollX = Math.floor(cursor_offset.x - size.x + scroll_increment_x);
                 }
                 else
                 {
-                    state.ScrollX = 0.;
+                    istate.ScrollX = 0.;
                 }
 
                 // Vertical scroll
@@ -1250,15 +1260,15 @@ export var ImguiInputMixin =
                     draw_pos.y = draw_window.DC.CursorPos.y;
                 }
 
-                state.CursorFollow = false;
+                istate.CursorFollow = false;
             }
 
             // Draw selection
-            const draw_scroll = new Vec2(state.ScrollX, 0);
+            const draw_scroll = new Vec2(istate.ScrollX, 0);
             if (render_selection)
             {
-                let text_selected_begin = Math.min(state.EditState.SelectStart, state.EditState.SelectEnd);
-                let text_selected_end = Math.max(state.EditState.SelectStart, state.EditState.SelectEnd);
+                let text_selected_begin = Math.min(istate.EditState.SelectStart, istate.EditState.SelectEnd);
+                let text_selected_end = Math.max(istate.EditState.SelectStart, istate.EditState.SelectEnd);
 
                 // FIXME: current code flow mandate that render_cursor is always
                 // true here, we are leaving the transparent one for tests.
@@ -1281,13 +1291,13 @@ export var ImguiInputMixin =
                         //p = p ? p + 1 : text_selected_end;
                         while (p < text_selected_end)
                         {
-                            if(state.Text.IsNewline(p++))
+                            if(istate.Text.IsNewline(p++))
                                 break;
                         }
                     }
                     else
                     {
-                        let ret = state.EditState.CalcTextRunSize(state.Text,
+                        let ret = istate.EditState.CalcTextRunSize(istate.Text,
                                                 p, text_selected_end, true);
                         p = ret.lastIndex;
                         if (ret.x <= 0)
@@ -1320,10 +1330,10 @@ export var ImguiInputMixin =
             // Draw blinking cursor
             if (render_cursor)
             {
-                state.CursorAnim += io.DeltaTime;
+                istate.CursorAnim += io.DeltaTime;
                 let cursor_is_visible = (!g.IO.ConfigInputTextCursorBlink) ||
-                            (state.CursorAnim <= 0) ||
-                            ((state.CursorAnim % 1.2) <= 0.8);
+                            (istate.CursorAnim <= 0) ||
+                            ((istate.CursorAnim % 1.2) <= 0.8);
                 let cursor_screen_pos = Vec2.Subtract(Vec2.Add(draw_pos, cursor_offset),
                                                     draw_scroll);
                 let cursor_screen_rect = Rect.FromXY(cursor_screen_pos.x,
@@ -1389,7 +1399,7 @@ export var ImguiInputMixin =
         {
             this.markItemEdited(id);
             if(onChange)
-                onChange(state.Text.toString());
+                onChange(istate.Text.toString());
         }
 
         if ((flags & InputTextFlags.EnterReturnsTrue) != 0)
