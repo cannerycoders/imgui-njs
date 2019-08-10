@@ -1253,6 +1253,12 @@ export var ImguiWinMgrMixin =
         return win.Size.y;
     },
 
+    GetWindowScroll()
+    {
+        let win = this.guictx.CurrentWindow;
+        return win.Scroll;
+    },
+
     GetContentRegionMax()
     {
         let win = this.guictx.CurrentWindow;

@@ -56,6 +56,17 @@ export class TextFilter
         this.regexpErr = null;
     }
 
+    Set(f)
+    {
+        this.filter.Set(f);
+        this.updateRegexp();
+    }
+
+    Get()
+    {
+        return this.filter.Get();
+    }
+
     Draw(label = "Filter", width=0, flags=0)
     {
         if (width != 0)
@@ -65,17 +76,7 @@ export class TextFilter
             this.imgui.PopItemWidth();
         if(value_changed)
         {
-            try
-            {
-                let r = new RegExp(this.filter.toString());
-                this.regexp = r;
-                this.regexpErr = null;
-            }
-            catch(err)
-            {
-                // report errors?
-                this.regexpErr = err.message;
-            }
+            this.updateRegexp();
         }
         if(this.regexpErr)
         {
@@ -86,6 +87,21 @@ export class TextFilter
             this.imgui.PopFont();
         }
         return value_changed;
+    }
+
+    updateRegexp()
+    {
+        try
+        {
+            let r = new RegExp(this.filter.toString());
+            this.regexp = r;
+            this.regexpErr = null;
+        }
+        catch(err)
+        {
+            // report errors?
+            this.regexpErr = err.message;
+        }
     }
 
     IsActive()

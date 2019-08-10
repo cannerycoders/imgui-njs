@@ -108,14 +108,14 @@ export var ImguiLayoutMixin =
         this.itemAdd(bb, 0);
     },
 
-    ItemWouldBeClipped(size)
+    NextItemWouldBeClipped(size)
     {
         let win = this.getCurrentWindow();
         if (win.SkipItems)
-            return false;
+            return true;
         let bb = new Rect(win.DC.CursorPos,
                         Vec2.Add(win.DC.CursorPos, size));
-        return this.bboxIsClipped(bb);
+        return this.isClippedEx(bb);
     },
 
     // undo a SameLine() or force a new line when in an horizontal-layout context.
@@ -594,10 +594,5 @@ export var ImguiLayoutMixin =
         }
         return false;
     },
-
-    bboxIsClipped(bb)
-    {
-        return this.isClippedEx(bb, 0, false);
-    }
 
 }; // end mixin

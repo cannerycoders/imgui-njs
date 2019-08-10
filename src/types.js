@@ -628,12 +628,12 @@ export class MutableString
 
     Set(str)
     {
-        this.str = str;
+        this.str = str ? str : "";
     }
 
     Length()
     {
-        return this.str.length;
+        return this.str ? this.str.length : 0;
     }
 
     CountLines()

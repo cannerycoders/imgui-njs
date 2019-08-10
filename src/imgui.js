@@ -51,6 +51,11 @@ export class Imgui extends ImguiMixins
         return this.guictx.Style;
     }
 
+    GetStyleFont(nm)
+    {
+        return this.guictx.Style.GetFont(nm);
+    }
+
     /** start a new ImGui frame, you can submit any command from this point
      * until Render()/EndFrame().
      */

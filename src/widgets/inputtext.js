@@ -657,7 +657,7 @@ export var ImguiInputMixin =
         // wide text we need to convert it when active, which is not ideal :(
         if (is_readonly && istate != null && (render_cursor || render_selection))
         {
-            istate.SetText(val);
+            istate.InitText(val);
             istate.CursorClamp();
             render_selection &= istate.HasSelection();
         }

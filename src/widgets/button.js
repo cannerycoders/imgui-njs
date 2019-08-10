@@ -244,6 +244,38 @@ export var ImguiButtonMixin =
         return pressed;
     }, // End ButtonBehavior
 
+    HyperText(label, flags=0) // TextButton
+    {
+        let win = this.getCurrentWindow();
+        if (win.SkipItems) return false;
+
+        let id = win.GetID(label);
+        let labelsize = this.CalcTextSize(label, true); // Vec2
+        let textpos = new Vec2(win.DC.CursorPos.x,
+                        win.DC.CursorPos.y + win.DC.CurrentLineTextBaseOffset);
+        let bb = new Rect(textpos, Vec2.Add(textpos, labelsize));
+        this.itemSize(labelsize);
+        if(!this.itemAdd(bb, 0))
+            return;
+
+        let hovered = new ValRef(), held = new ValRef();
+        if (win.DC.ItemFlags & ItemFlags.ButtonRepeat)
+            flags |= ButtonFlags.Repeat;
+        let pressed = this.ButtonBehavior(bb, id, hovered, held, flags);
+        if (pressed)
+            this.markItemEdited(id);
+
+        // Render
+        let g = this.guictx;
+        let style = g.Style;
+        let col = style.GetColor((held.get() && hovered.get() ?
+                        "LinkActive" : hovered.get() ? "LinkHovered" : "Link"));
+        this.PushStyleColor("Text", col);
+        this.renderTextWrapped(bb.Min, label.split("##")[0], 0);
+        this.PopStyleColor();
+        return pressed;
+    },
+
     ButtonEx(label, size_arg=Vec2.Zero(), flags=0)
     {
         let win = this.getCurrentWindow();
