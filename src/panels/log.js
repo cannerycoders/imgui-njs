@@ -19,6 +19,7 @@ export class LogWindow
         this.filter = null;
         this.lastError = "";
         this.lastErrorLevel = null;
+        this.lastMsg = "";
         this.console = {
             debug: console.debug,
             log: console.log,
@@ -86,6 +87,11 @@ export class LogWindow
         return this.lastError;
     }
 
+    GetLastMsg()
+    {
+        return this.lastMsg;
+    }
+
     GetLastErrorLevel()
     {
         return this.lastErrorLevel;
@@ -93,6 +99,7 @@ export class LogWindow
 
     log(msg, level="INFO", args)
     {
+        this.lastMsg = msg;
         if(msg.message)
             msg = msg.message;
         if(args && args.length > 0)

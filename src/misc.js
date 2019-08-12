@@ -394,13 +394,13 @@ export var ImguiMiscMixin =
     {console.assert(0);},
 
 
-    // Widgets
+    // Widgets (implemented in widgets/text,scrollbar.js)
     textEx(text, textflags = 0)
-    {},
+    {console.assert(0);},
     scrollbar(axis)
-    {},
+    {console.assert(0);},
     setScrollbarID(win, axis)
-    {},
+    {console.assert(0);},
 
     //-------
     updateMouseInputs()
@@ -488,7 +488,8 @@ export var ImguiMiscMixin =
         let g = this.guictx;
         if (!g.HoveredWindow || g.HoveredWindow.Collapsed)
             return;
-        if (g.IO.MouseWheel == 0. && g.IO.MouseWheelH == 0.)
+        if (g.IO.MouseWheel == 0. && g.IO.MouseWheelH == 0. &&
+            g.IO.TouchDelta.x == 0 && g.IO.TouchDelta.y == 0)
             return;
 
         // If a child window has the ImGuiWindowFlags_NoScrollWithMouse flag,
@@ -507,7 +508,7 @@ export var ImguiMiscMixin =
         const scroll_allowed = !(scroll_window.Flags & WindowFlags.NoScrollWithMouse) &&
                                !(scroll_window.Flags & WindowFlags.NoMouseInputs);
 
-        if (g.IO.MouseWheel != 0)
+        if (g.IO.MouseWheel != 0 || g.IO.TouchDelta.y != 0)
         {
             if (g.IO.KeyCtrl && g.IO.FontAllowUserScaling)
             {
@@ -529,20 +530,37 @@ export var ImguiMiscMixin =
             if (!g.IO.KeyCtrl && scroll_allowed)
             {
                 // Mouse wheel vertical scrolling
-                let scroll_amount = 5 * scroll_window.CalcLineHeight();
-                scroll_amount = Math.floor(Math.min(scroll_amount,
+                let amt = 5 * scroll_window.CalcLineHeight();
+                amt = Math.floor(Math.min(amt,
                             .67*(scroll_window.ContentsRegionRect.GetHeight() +
                                  scroll_window.WindowPadding.y * 2)));
-                scroll_window.SetWindowScrollY(scroll_window.Scroll.y -
-                                    g.IO.MouseWheel * scroll_amount);
+                if(g.IO.MouseWheel != 0)
+                    amt *= g.IO.MouseWheel;
+                else
+                {
+                    amt *= g.IO.TouchDelta.y;
+                    if(g.IO.TouchActive == 0)
+                    {
+                        g.IO.TouchDelta.y *= .8;
+                        if(Math.abs(g.IO.TouchDelta.y) < .25)
+                            g.IO.TouchDelta.y = 0;
+                    }
+                }
+                scroll_window.SetWindowScrollY(scroll_window.Scroll.y - amt);
             }
         }
-        if (g.IO.MouseWheelH != 0 && scroll_allowed && !g.IO.KeyCtrl)
+        if (g.IO.MouseWheelH != 0 || g.IO.TouchDelta.x != 0 &&
+            scroll_allowed && !g.IO.KeyCtrl)
         {
             // Mouse wheel horizontal scrolling (for hardware that supports it)
-            const scroll_amount = scroll_window.CalcLineHeight();
-            scroll_window.SetWindowScrollX(scroll_window.Scroll.x -
-                                            g.IO.MouseWheelH*scroll_amount);
+            let amt = scroll_window.CalcLineHeight();
+            if(g.IO.MouseWheelH != 0)
+                amt *= g.IO.MouseWheelH;
+            else
+            {
+                amt *= g.IO.TouchDelta.x;
+            }
+            scroll_window.SetWindowScrollX(scroll_window.Scroll.x - amt);
         }
     },
 

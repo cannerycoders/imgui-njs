@@ -164,6 +164,11 @@ export class IO
         this.NavInputs.length = NavInput.COUNT;
         this.NavInputs.fill(0);
 
+        // https://developer.mozilla.org/en-US/docs/Web/API/Touch_events
+        this.Touches = []; // ongoing touches
+        this.TouchActive = false;
+        this.TouchDelta = {x: 0, y: 0};
+
         //------------------------------------------------------------------
         // Output - Retrieve after calling NewFrame()
         //------------------------------------------------------------------
@@ -332,7 +337,28 @@ export class IO
             canvas.addEventListener("pointerup", this.onPointerUp.bind(this));
 
             canvas.addEventListener("wheel", this.onWheel.bind(this),
-                    {passive: true});
+                    {passive: true}); // means no prevent-default
+            
+            // On a phone, touch can be tricky since browsers use touch
+            // events to synthesize pointerclick and pointermove events.
+            // No mouse, no wheel, etc. If we want a natural scrolling
+            // behavior from touch events we would need to distinguish between 
+            // mouse-like and mousewheel-like events. Currently this doesn't
+            // seem possible.  Specifically: if a touchstart occurs over a
+            // clickable (button, drag, etc) we can't infer whether the
+            // user is scrolling or clicking.  In the case of buttons, we
+            // could wait for a release event and check if there's little/no 
+            // motion. This wouldn't work for draggables like sliders and
+            // drags.  Currently we update this.Touch* and support 
+            // mouse-wheel-like behavior in imgui.updateMouseWheel().
+            canvas.addEventListener("touchstart", this.onTouchStart.bind(this),
+                                    {passive: true});
+            canvas.addEventListener("touchend", this.onTouchEnd.bind(this),
+                                    {passive: true});
+            canvas.addEventListener("touchcancel", this.onTouchCancel.bind(this),
+                                    {passive: true});
+            canvas.addEventListener("touchmove", this.onTouchMove.bind(this),
+                                    {passive: true});
         }
 
         // Setup back-end capabilities flags
@@ -489,6 +515,10 @@ export class IO
             c.removeEventListener("pointermove", this.onPointerMove.bind(this));
             c.removeEventListener("pointerdown", this.onPointerDown.bind(this));
             c.removeEventListener("contextmenu", this.onContextMenu.bind(this));
+            c.removeEventListener("touchstart", this.onTouchStart.bind(this));
+            c.removeEventListener("touchend", this.onTouchEnd.bind(this));
+            c.removeEventListener("touchcancel", this.onTouchCancel.bind(this));
+            c.removeEventListener("touchmove", this.onTouchMove.bind(this));
         }
 
         if (typeof(window) !== "undefined")
@@ -709,6 +739,124 @@ export class IO
         this.MouseWheelH = evt.deltaX * scale;
         this.MouseWheel = -evt.deltaY * scale; // Mouse wheel: 1 unit scrolls about 5 lines text.
     }
+
+    onTouchStart(evt)
+    {
+        evt.preventDefault();
+        var touches = evt.changedTouches;
+        var offset = {x: 0, y: 0}; // getTouchPos(evt);  
+        for (var i=0; i < touches.length; i++) 
+        {
+            if(this.validateTouch(touches[i], offset))
+            {
+                evt.preventDefault();
+                console.log("touchstart:" + i + " " + Math.round(touches[i].clientY));
+                this.Touches.push(this.copyTouch(touches[i]));
+                this.TouchActive++;
+            }
+        }
+    }
+
+    onTouchEnd(evt)
+    {
+        evt.preventDefault();
+        var touches = evt.changedTouches;
+        var offset = {x: 0, y: 0};
+        for (let i = 0; i < touches.length; i++) 
+        {
+            if(this.validateTouch(touches[i], offset))
+            {
+                evt.preventDefault();
+                let j = this.getTouchIndex(touches[i]);
+                if (j >= 0) 
+                {
+                    this.Touches.splice(j, 1); // remove it; we're done
+                    this.TouchActive--;
+                    // we could set TouchDelta to zero but to
+                    // get deceleration, we let updateMouseWheel
+                    // handle it.
+                }
+                else 
+                {
+                    console.log("hm: " + touches[i].identifier);
+                }
+            }
+            else
+                console.log("invalid touch");
+        }
+    }
+
+    onTouchCancel(evt)
+    {
+        evt.preventDefault();
+        for(var i=0;i<evt.changedTouches.length;i++)
+        {
+            let j = this.getTouchIndex(evt.changedTouches[i]);
+            if(j != -1)
+            {
+                this.TouchActive--;
+                this.Touches.splice(j, 1);
+            }
+        }
+    }
+
+    onTouchMove(evt)
+    {
+        evt.preventDefault();
+        let touches = evt.changedTouches;
+        let offset = {x: 0, y: 0};
+        let scale = .1;
+        for (let i = 0; i < touches.length; i++) 
+        {
+            if(this.validateTouch(touches[i], offset))
+            {
+                evt.preventDefault();
+                let j = this.getTouchIndex(touches[i]);
+                if (j >= 0) 
+                {
+                    let deltaX = touches[i].clientX - this.Touches[j].x;
+                    let deltaY = touches[i].clientY - this.Touches[j].y;
+                    console.log("move by: " + Math.round(deltaX) + ", " + Math.round(deltaY));
+                    // swap in the new touch record
+                    this.Touches.splice(j, 1, this.copyTouch(touches[i])); 
+                    this.TouchDelta.x = deltaX * scale;
+                    this.TouchDelta.y = deltaY * scale;
+                }
+            } 
+            else 
+            {
+                console.log("can't figure out which touch to continue");
+            }
+        }
+    }
+
+    getTouchIndex(t)
+    {
+        for(let i=0;i<this.Touches.length;i++)
+        {
+            if(t.identifier == this.Touches[i].id)
+                return i;
+        }
+        return -1;
+    }
+
+    copyTouch(t)
+    {
+        return {
+            id: t.identifier,
+            x: t.clientX,
+            y: t.clientY
+        };
+    }
+
+    validateTouch(t, offset)
+    {
+        return (t.clientX - offset.x > 0 && 
+                t.clientX - offset.x < parseFloat(this.canvas.width) && 
+                t.clientY - offset.y > 0 && 
+                t.clientY - offset.y < parseFloat(this.canvas.height));
+    }
+
 
     onContextMenu(evt/*Event*/) /* rightclick, (change background?) */
     {
