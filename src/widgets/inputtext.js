@@ -1,3 +1,4 @@
+/* global App */
 import {Axis, Dir, InputSource, Key,
         MouseCursor, NavInput} from "../enums.js";
 import {ButtonFlags} from "./button.js";
@@ -56,7 +57,8 @@ const ValidChars =
     Hex: "0123456789AaBbCcDdEeFf",
 };
 
-const MaxDisplayLength = 2 * 1024 * 1024; // 2M chars (seems like a lot!)
+const MaxDisplayLength = 2 * 1024 * 1024; // 2M chars (seems like a lot!)o
+let DOMTextEditing = null; 
 
 // Internal state of the currently focused/edited text input box
 // This is stored on guictx and valid for <= 1 active/focused text
@@ -86,9 +88,12 @@ export class InputTextState // NB: contains TextEditState
         this.UserFlags = 0;
         this.UserCallback = null;
         this.UserCallbackData = null;
+
+        if(DOMTextEditing == null)
+            DOMTextEditing = App.IsMobileDevice(); // for debugging: || true;
     }
 
-    InitText(text)
+    Init(text)
     {
         if(text.IsMutable)
         {
@@ -105,6 +110,68 @@ export class InputTextState // NB: contains TextEditState
     InitTextEdit(singleLine, fontScale) //
     {
         this.EditState.Init(singleLine, fontScale);
+    }
+
+    Update(imgui, id, frame, vis)
+    {
+        if(DOMTextEditing)
+        {
+            // InputTextState instances are shared accross multiple
+            // inputtext fields.  Update messages are delivered
+            // to create as well as to hide our inputtext entry.
+            // We have only a single DOM entry, but only act on
+            // the hide request if the hiding id is currently visible.
+            let idstr = "imgui_inputtext_" + id;
+            if(vis)
+            {
+                let io = imgui.GetIO();
+                if(!this.domElement)
+                {
+                    let style = imgui.GetStyle();
+                    let bgcolor = style.GetColor("FrameBg").AsHashStr(true);
+                    let txtcolor = style.GetColor("Text").AsStr();
+                    let bordercolor = style.GetColor("Border").AsStr();
+                    let rad = style.FrameRounding;
+                    this.domElement = document.createElement("input");
+                    this.domElement.setAttribute("type", "text");
+                    this.domElement.style.position = "absolute";
+                    this.domElement.style.display = "inline";
+                    this.domElement.style.backgroundColor = bgcolor;
+                    this.domElement.style.color = txtcolor;
+                    this.domElement.style.borderRadius = `${rad}px ${rad}px`;
+                    this.domElement.style.borderWidth = ".5px";
+                    this.domElement.style.borderColor = bordercolor;
+                    // keypress doesn't work on android browser
+                    // keyup only returns a keycode of 229 (buffer busy) 
+                    // unless enter is pressed (13) because auto-correct, etc
+                    this.domElement.onkeyup = (evt) => 
+                    {
+                        if(evt.keyCode == 13)
+                        {
+                            // Transfer text from domElement to our internal state.
+                            // dismiss overlay.
+                            // console.log("yippee:" + this.domElement.value);
+                            this.Text.Set(this.domElement.value);
+                            this.domElement.blur();
+                            this.domElement.style.display = "none";
+                            imgui.FocusWindow(null);
+                        }
+                    };
+                    document.body.appendChild(this.domElement);
+                }
+                this.domElement.setAttribute("id", idstr);
+                this.domElement.style.left = io.DisplayOffset.x + frame.Min.x + "px";
+                this.domElement.style.top = io.DisplayOffset.y + frame.Min.y + "px";
+                this.domElement.style.width = (frame.Max.x - frame.Min.x) + "px";
+                this.domElement.style.height = (frame.Max.y - frame.Min.y) + "px";
+                this.domElement.style.display = "inline";
+                this.domElement.value = this.Text.Get();
+                this.domElement.focus();
+            }
+            else
+            if(this.domElement && this.domElement.id == idstr)
+                this.domElement.style.display = "none";
+        }
     }
 
     CursorAnimReset()
@@ -590,7 +657,7 @@ export var ImguiInputMixin =
 
             // Take a copy of the initial value. From the moment we focused we are
             // ignoring the content of 'buf' (unless we are in read-only mode)
-            istate.InitText(val);
+            istate.Init(val);
 
             // Preserve cursor position and undo/redo stack if we come back to
             // same widget FIXME: For non-readonly widgets we might be able to
@@ -623,6 +690,7 @@ export var ImguiInputMixin =
             this.setActiveID(id, win);
             this.setFocusID(id, win);
             this.FocusWindow(win);
+            istate.Update(this, id, frame_bb, true);
             console.assert(NavInput.COUNT < 32);
             g.ActiveIdBlockNavInputFlags = (1 << NavInput.Cancel);
             if (flags & (InputTextFlags.CallbackCompletion | InputTextFlags.AllowTabInput))
@@ -632,6 +700,10 @@ export var ImguiInputMixin =
             }
             if (!is_multiline && !(flags & InputTextFlags.CallbackHistory))
                 g.ActiveIdAllowNavDirFlags = ((1 << Dir.Up) | (1 << Dir.Down));
+            if(App.IsMobileDevice() || true)
+            {
+                // console.log(`make active ${frame_bb.Min.x}, ${frame_bb.Min.y}`);
+            }
         }
 
         // We have an edge case if ActiveId was set through another widget (e.g.
@@ -657,7 +729,7 @@ export var ImguiInputMixin =
         // wide text we need to convert it when active, which is not ideal :(
         if (is_readonly && istate != null && (render_cursor || render_selection))
         {
-            istate.InitText(val);
+            istate.Init(val);
             istate.CursorClamp();
             render_selection &= istate.HasSelection();
         }
@@ -1106,7 +1178,10 @@ export var ImguiInputMixin =
         // Release active ID at the end of the function (so e.g. pressing
         // Return still does a final application of the value)
         if (clear_active_id && g.ActiveId == id)
+        {
             this.clearActiveID();
+            istate.Update(this, id, frame_bb, false);
+        }
 
         // Render frame
         if (!is_multiline)

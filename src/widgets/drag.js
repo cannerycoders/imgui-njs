@@ -258,7 +258,9 @@ export var ImguiDragMixin =
                                             w, label_size.y+style.FramePadding.y*2));
             total_bb = new Rect(frame_bb.Min,
                                   Vec2.AddXY(frame_bb.Max,
-                                    label_size.x>0 ? style.ItemInnerSpacing.x + label_size.x : 0,
+                                    label_size.x > 0 ? 
+                                        style.ItemInnerSpacing.x + label_size.x
+                                        : 0,
                                     0));
             this.itemSize(total_bb, style.FramePadding.y);
             if (!this.itemAdd(total_bb, id, frame_bb))
@@ -318,10 +320,7 @@ export var ImguiDragMixin =
 
         if(flags & DragFlags.AsHyperText)
         {
-            const frame_col = style.GetColor(g.ActiveId == id ? "FrameBgActive" :
-                    g.HoveredId == id ? "FrameBgHovered" : "FrameBg");
-            this.renderFrame(frame_bb.Min, frame_bb.Max, frame_col, true,
-                            style.FrameRounding);
+            this.renderFrameBorder(frame_bb.Min, frame_bb.Max, 0, .5);
 
             let active = g.ActiveId == id && 
                          g.ActiveIdSource == InputSource.Mouse && 

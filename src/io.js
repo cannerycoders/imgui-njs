@@ -27,6 +27,7 @@ export class IO
         //------------------------------------------------------------------
         this.ConfigFlags = 0;
         this.BackendFlags = 0;
+        this.DisplayOffset = new Vec2(0, 0); // position of display relative to parent (usually 0)
         this.DisplaySize = new Vec2(0, 0); // Main display size, in pixels. (Vec2)
         this.DeltaTime = 1 /  60; // Time elapsed since last frame, in seconds.
         this.IniSavingRate = 5; // Minimum time between saving state, in seconds.
@@ -438,10 +439,10 @@ export class IO
             window.localStorage.setItem(this.IniFilename, this.imgui.SaveIniSettingsToMemory());
         }
 
-        const w = this.canvas.scrollWidth;
-        const h = this.canvas.scrollHeight;
-        this.DisplaySize.x = w;
-        this.DisplaySize.y = h;
+        this.DisplaySize.x = this.canvas.scrollWidth;
+        this.DisplaySize.y = this.canvas.scrollHeight;
+        this.DisplayOffset.x = this.canvas.offsetLeft;
+        this.DisplayOffset.y = this.canvas.offsetTop;
 
         const dt = time - this.PrevTime;
         this.PrevTime = time;
@@ -694,7 +695,7 @@ export class IO
     // languages that we may lose by skipping these?
     onKeyPress(evt/*KeyboardEvent*/)
     {
-        console.debug(`keypress: ${evt.keyCode}, ${evt.key}`);
+        // console.debug(`keypress: ${evt.keyCode}, ${evt.key}`);
     }
 
     onPointerMove(evt/*PointerEvent*/)
@@ -750,7 +751,7 @@ export class IO
             if(this.validateTouch(touches[i], offset))
             {
                 evt.preventDefault();
-                console.log("touchstart:" + i + " " + Math.round(touches[i].clientY));
+                // console.log("touchstart:" + i + " " + Math.round(touches[i].clientY));
                 this.Touches.push(this.copyTouch(touches[i]));
                 this.TouchActive++;
             }
@@ -778,11 +779,11 @@ export class IO
                 }
                 else 
                 {
-                    console.log("hm: " + touches[i].identifier);
+                    // console.log("hm: " + touches[i].identifier);
                 }
             }
             else
-                console.log("invalid touch");
+                console.error("invalid touch");
         }
     }
 
@@ -816,7 +817,9 @@ export class IO
                 {
                     let deltaX = touches[i].clientX - this.Touches[j].x;
                     let deltaY = touches[i].clientY - this.Touches[j].y;
-                    console.log("move by: " + Math.round(deltaX) + ", " + Math.round(deltaY));
+                    // console.log("move by: " + 
+                    //              Math.round(deltaX) + ", " + 
+                    //              Math.round(deltaY));
                     // swap in the new touch record
                     this.Touches.splice(j, 1, this.copyTouch(touches[i])); 
                     this.TouchDelta.x = deltaX * scale;
@@ -825,7 +828,7 @@ export class IO
             } 
             else 
             {
-                console.log("can't figure out which touch to continue");
+                console.error("can't figure out which touch to continue");
             }
         }
     }

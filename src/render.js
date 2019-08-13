@@ -107,11 +107,11 @@ export var ImguiRenderMixin =
             this.renderFrameBorder(p_min, p_max, rounding);
     },
 
-    renderFrameBorder(p_min, p_max, rounding)
+    renderFrameBorder(p_min, p_max, rounding, size=0)
     {
         let g = this.guictx;
         let window = g.CurrentWindow;
-        const border_size = g.Style.FrameBorderSize;
+        const border_size = size == 0 ? g.Style.FrameBorderSize : size;
         if (border_size > 0)
         {
             window.DrawList.AddRect(Vec2.AddXY(p_min,1,1),

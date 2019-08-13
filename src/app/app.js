@@ -40,6 +40,16 @@ export default class ImguiApp
         // work in the electron environment.
         this.platform = navigator.platform;
         this.clipboard = navigator.clipboard;
+
+        window.App = this;
+    }
+
+    IsMobileDevice()
+    {
+        let a = window.navigator.userAgent.toLowerCase();
+        return a.indexOf("android") != -1 ||
+               a.indexOf("iphone") != -1 ||
+               a.indexOf("ipad") != -1;
     }
 
     GetName()
