@@ -8,12 +8,7 @@ import {MouseCursor, NavInput, Key} from "./enums.js";
 import {FontAtlas} from "./font.js";
 import {ArrayEx} from "./arrayex.js";
 
-function NullFunc() {}
-
-const SystemEvents =
-{
-
-};
+const DirtyCount = 5;
 
 export class IO
 {
@@ -21,6 +16,8 @@ export class IO
     {
         this.imgui = imgui;
         this.PrevTime = 0;
+        this.PrevDirtyTime = 0;
+        this.Dirty = 0;
 
         //------------------------------------------------------------------
         // Configuration (fill once)
@@ -447,6 +444,20 @@ export class IO
         const dt = time - this.PrevTime;
         this.PrevTime = time;
         this.DeltaTime = dt / 1000;
+        if(false)
+        {
+            // this experiement currently fails due to the fact that
+            // certain imgui behaviors occur over multiple frames.
+            // Popups, textinput are among the biggest fails.
+            const ddt = time - this.PrevDirtyTime;
+            if(ddt > 300) // minimum 3 frames per sec
+            {
+                this.PrevDirtyTime = time;
+                this.Dirty++;
+            }
+        }
+        else
+            this.Dirty = true; // checked by imgui.NewFrame
 
         if (this.WantSetMousePos)
             console.log("TODO: MousePos", this.MousePos.x, this.MousePos.y);
@@ -494,12 +505,11 @@ export class IO
                 document.body.style.cursor = nc;
             }
         }
-
-        // XXX: gamepad nav
     }
 
     EndFrame()
     {
+        this.Dirty--;
     }
 
     Shutdown()
@@ -551,18 +561,20 @@ export class IO
         return ret;
     }
 
-    onCopy(evt/*CliboardEvent*/)
+    onCopy(evt/*ClipboardEvent*/)
     {
         evt.clipboardData.setData("text/plain", this.clipboardtext);
         // console.log(`${event.type}: "${clipboardtext}"`);
         evt.preventDefault();
+        this.Dirty = DirtyCount;
     }
 
-    onCut(evt/*CliboardEvent*/)
+    onCut(evt/*ClipboardEvent*/)
     {
         evt.clipboardData.setData("text/plain", this.clipboardtext);
         // console.log(`${event.type}: "${clipboardtext}"`);
         evt.preventDefault();
+        this.Dirty = DirtyCount;
     }
 
     onPaste(evt)
@@ -570,6 +582,7 @@ export class IO
         this.Clipboardtext = evt.clipboardData.getData("text/plain");
         // console.log(`${evt.type}: "${clipboardtext}"`);
         evt.preventDefault();
+        this.Dirty = DirtyCount;
     }
 
     onWindowResize()
@@ -580,6 +593,7 @@ export class IO
             this.canvas.width = this.canvas.scrollWidth * devicePixelRatio;
             this.canvas.height = this.canvas.scrollHeight * devicePixelRatio;
         }
+        this.Dirty = DirtyCount;
     }
 
     onGamepadConnected(evt)
@@ -605,6 +619,7 @@ export class IO
             this.KeysDown[i] = false;
         for (let i=0; i< this.MouseDown.length; ++i)
             this.MouseDown[i] = false;
+        this.Dirty = DirtyCount;
     }
 
     // In a keypress event, the Unicode value of the key pressed is
@@ -652,6 +667,7 @@ export class IO
             if(!this.isSystemEvent(evt))
                 evt.preventDefault();
         }
+        this.Dirty = DirtyCount;
     }
 
     // this is a matter of policy, perhaps user-configuration required?
@@ -688,6 +704,7 @@ export class IO
         this.KeyAlt = evt.altKey;
         this.KeySuper = evt.metaKey;
         this.KeysDown[evt.keyCode] = false;
+        this.Dirty = DirtyCount;
     }
 
     // no meta keys are delivered through this event, only "regular" keys.
@@ -696,6 +713,7 @@ export class IO
     onKeyPress(evt/*KeyboardEvent*/)
     {
         // console.debug(`keypress: ${evt.keyCode}, ${evt.key}`);
+        this.Dirty = DirtyCount;
     }
 
     onPointerMove(evt/*PointerEvent*/)
@@ -706,6 +724,7 @@ export class IO
             evt.preventDefault();
         }
         // console.log(`${this.MousePos.x.toFixed(0)}, ${this.MousePos.y.toFixed(0)}`);
+        this.Dirty = DirtyCount;
     }
 
     onPointerDown(evt/*pointerEvent*/)
@@ -715,11 +734,13 @@ export class IO
         this.MousePos.y = evt.offsetY;
         this.MouseDown[this.MouseButtonMap[evt.button]] = true;
         evt.preventDefault(); // https://bit.ly/2SfbQqG
+        this.Dirty = DirtyCount;
     }
 
     onPointerUp(evt/*PointerEvent*/)
     {
         this.MouseDown[this.MouseButtonMap[evt.button]] = false;
+        this.Dirty = DirtyCount;
     }
 
     onWheel(evt/*WheelEvent*/)
@@ -739,6 +760,7 @@ export class IO
         }
         this.MouseWheelH = evt.deltaX * scale;
         this.MouseWheel = -evt.deltaY * scale; // Mouse wheel: 1 unit scrolls about 5 lines text.
+        this.Dirty = DirtyCount;
     }
 
     onTouchStart(evt)
@@ -756,6 +778,7 @@ export class IO
                 this.TouchActive++;
             }
         }
+        this.Dirty = DirtyCount;
     }
 
     onTouchEnd(evt)
@@ -785,6 +808,7 @@ export class IO
             else
                 console.error("invalid touch");
         }
+        this.Dirty = DirtyCount;
     }
 
     onTouchCancel(evt)
@@ -799,6 +823,7 @@ export class IO
                 this.Touches.splice(j, 1);
             }
         }
+        this.Dirty = DirtyCount;
     }
 
     onTouchMove(evt)
@@ -831,6 +856,7 @@ export class IO
                 console.error("can't figure out which touch to continue");
             }
         }
+        this.Dirty = DirtyCount;
     }
 
     getTouchIndex(t)

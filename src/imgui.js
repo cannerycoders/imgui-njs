@@ -56,8 +56,10 @@ export class Imgui extends ImguiMixins
         return this.guictx.Style.GetFont(nm);
     }
 
-    /** start a new ImGui frame, you can submit any command from this point
-     * until Render()/EndFrame().
+    /** 
+     * Start a new ImGui frame, you can submit any command from this point
+     * until Render()/EndFrame().  Returns an experimental value that can
+     * be used to bypass redraw. 
      */
     NewFrame(time)
     {
@@ -305,6 +307,9 @@ export class Imgui extends ImguiMixins
         this.SetNextWindowSize(new Vec2(400,400), CondFlags.FirstUseEver);
         this.Begin("Debug##Default", null, WindowFlags.NoSavedSettings);
         g.FrameScopePushedImplicitWindow = true;
+
+
+        return this.GetIO().Dirty;
     }
 
     /** end the ImGui frame. automatically called by Render(), you likely

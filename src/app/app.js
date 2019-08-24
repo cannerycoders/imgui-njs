@@ -106,15 +106,19 @@ export default class ImguiApp
         }
     }
 
-    OnLoop(time)
+    OnLoop(time) // called e.g. 60 fps
     {
         if(!this.canvas) return;
-        this.imgui.NewFrame(time);
-        this.ShowContextMenu(this.imgui);
-        this.FileBrowser.Show(this.imgui); // manages its own IsOpen state
-        this.Log.Show(this.imgui, "Log", this.showLog);
-        this.OnFrame(this.imgui); //
-        this.imgui.Render();
+        if(this.imgui.NewFrame(time))
+        {
+            this.ShowContextMenu(this.imgui);
+            this.FileBrowser.Show(this.imgui); // manages its own IsOpen state
+            this.Log.Show(this.imgui, "Log", this.showLog);
+            this.OnFrame(this.imgui); //
+            this.imgui.Render();
+        }
+        else
+            this.imgui.EndFrame();
         return this.running;
     }
 
