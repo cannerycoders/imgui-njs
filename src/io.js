@@ -765,14 +765,13 @@ export class IO
 
     onTouchStart(evt)
     {
-        evt.preventDefault();
         var touches = evt.changedTouches;
         var offset = {x: 0, y: 0}; // getTouchPos(evt);  
         for (var i=0; i < touches.length; i++) 
         {
             if(this.validateTouch(touches[i], offset))
             {
-                evt.preventDefault();
+                // evt.preventDefault();  (passive)
                 // console.log("touchstart:" + i + " " + Math.round(touches[i].clientY));
                 this.Touches.push(this.copyTouch(touches[i]));
                 this.TouchActive++;
@@ -783,14 +782,13 @@ export class IO
 
     onTouchEnd(evt)
     {
-        evt.preventDefault();
         var touches = evt.changedTouches;
         var offset = {x: 0, y: 0};
         for (let i = 0; i < touches.length; i++) 
         {
             if(this.validateTouch(touches[i], offset))
             {
-                evt.preventDefault();
+                // evt.preventDefault(); (passive)
                 let j = this.getTouchIndex(touches[i]);
                 if (j >= 0) 
                 {
@@ -813,7 +811,7 @@ export class IO
 
     onTouchCancel(evt)
     {
-        evt.preventDefault();
+        // evt.preventDefault(); (passive)
         for(var i=0;i<evt.changedTouches.length;i++)
         {
             let j = this.getTouchIndex(evt.changedTouches[i]);
@@ -828,7 +826,6 @@ export class IO
 
     onTouchMove(evt)
     {
-        evt.preventDefault();
         let touches = evt.changedTouches;
         let offset = {x: 0, y: 0};
         let scale = .1;
@@ -836,7 +833,7 @@ export class IO
         {
             if(this.validateTouch(touches[i], offset))
             {
-                evt.preventDefault();
+                // evt.preventDefault(); (passive)
                 let j = this.getTouchIndex(touches[i]);
                 if (j >= 0) 
                 {

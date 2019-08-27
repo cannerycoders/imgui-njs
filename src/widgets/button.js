@@ -764,7 +764,7 @@ export var ImguiButtonMixin =
         }
         if(img._error)
         {
-            return this.getImage("/img/404.png");
+            return this.getImage("img/404.png");
         }
         else
             return null;

@@ -3,7 +3,7 @@ import {InputTextFlags} from "../widgets/inputtext.js";
 import {TabBarFlags} from "../widgets/tab.js";
 import {WindowFlags} from "../window.js";
 import {Color, Colors} from "../color.js";
-import {ExampleFileMenu} from "./demomenus.js";
+import {ExampleFileMenu} from "./demoMenus.js";
 
 export class DemoLayout
 {
