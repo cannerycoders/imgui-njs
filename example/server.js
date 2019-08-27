@@ -1,5 +1,3 @@
-const fs = require("fs");
-const url = require("url");
 const http = require("http");
 const express = require("express");
 const path = require("path");
@@ -13,8 +11,8 @@ const logRequestStart = (req, res, next) => {
 const context = {};
 context.app = express();
 context.app.use(logRequestStart);
+context.app.use("/js/imgui-njs", express.static(path.join(__dirname, "../src")));
 context.app.use("/", express.static(path.join(__dirname,"./www")));
-context.app.use("/js/imgui-njs", express.static(path.join(__dirname, "..")));
 context.server = http.createServer({}, context.app);
 
 /* operation -------------------------------------------------------------- */
