@@ -1,9 +1,9 @@
-import {ValRef, Vec2, MutableString} from "/js/imgui-njs/src/types.js";
-import FileBrowser from "/js/imgui-njs/src/panels/filebrowser.js";
-import Log from "/js/imgui-njs/src/panels/log.js";
-import {Imgui} from "/js/imgui-njs/src/imgui.js";
-import {WindowFlags} from "/js/imgui-njs/src/window.js";
-import {Colors} from "/js/imgui-njs/src/color.js";
+import {ValRef, Vec2, MutableString} from "../types.js";
+import FileBrowser from "../panels/filebrowser.js";
+import Log from "../panels/log.js";
+import {Imgui} from "../imgui.js";
+import {WindowFlags} from "../window.js";
+import {Colors} from "../color.js";
 
 import {Prefs} from "./prefs.js";
 import {FileSystem} from "./filesystem.js";
