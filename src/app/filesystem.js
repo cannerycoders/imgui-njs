@@ -19,6 +19,7 @@ export class FileSystem
     constructor(runtime)
     {
         let self = this;
+        this.runtime = runtime;
         if(runtime == "browser")
         {
             if(window.BrowserFS != undefined)
@@ -43,9 +44,17 @@ export class FileSystem
                 console.warn("No file-IO in browser mode");
         }
         else
+        if(runtime == "electron")
+        {
+            // we use window.require to trick webpack for electron
+            let remote = window.require("electron").remote;
+            this.fs = remote.require("fs");
+            this.path = window.require("path"); 
+        }
+        else
         {
             this.path = require("path");
-            this.fs = require("fs");
+            this.fs = null; // no filesystem here yet (eg: cordova)
         }
     }
 

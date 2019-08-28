@@ -588,7 +588,13 @@ export class FileBrowser
             // spawn a cmd child process, pipe the "wmic" command to it
             // alt take: spawn wmic directly (assumes wmic is in path)
             // https://stackoverflow.com/questions/15878969/enumerate-system-drives-in-nodejs
-            let spawn = require("child_process").spawn;
+            let cp = window.require("child_process");
+            if(!cp)
+            {
+                console.error("listVolumes missing child_process module");
+                return;
+            }
+            let spawn = cp.spawn;
             const list = spawn("wmic", ["logicaldisk", "get", "name"]);
             list.stdout.on("data", (data) =>
             {

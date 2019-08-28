@@ -101,7 +101,8 @@ export default class ImguiApp
         this.imgui.EndFrame();
         if(this.runtime == "electron")
         {
-            const remote = require("electron").remote;
+            // used window.require to trick webpack
+            const remote = window.require("electron").remote;
             remote.getCurrentWindow().close();
         }
     }
