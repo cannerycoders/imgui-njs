@@ -46,11 +46,15 @@ export default class ImguiApp
 
     IsMobileDevice()
     {
+        return (typeof window.orientation !== "undefined") || 
+               (navigator.userAgent.indexOf("IEMobile") !== -1);
+        /*
         let a = window.navigator.userAgent.toLowerCase();
         return a.indexOf("android") != -1 ||
                a.indexOf("iphone") != -1 ||
                a.indexOf("ipad") != -1;
-    }
+        */
+    }    
 
     GetName()
     {
