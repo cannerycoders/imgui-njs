@@ -20,8 +20,8 @@ export default class ImguiApp
         this.version = version;
         this.prefs = new Prefs(this.appname);
         this.running = true;
-        this.runtime = (window.process && window.process.type)
-                            ? "electron" : "browser";
+        this.runtime = (window.process && window.process.type) ? "electron" 
+                        : (window.cordova) ? "cordova" : "browser";
         this.filesystem = new FileSystem(this.runtime);
         this.fs = this.filesystem.fs;
         this.path = this.filesystem.path;
@@ -34,7 +34,6 @@ export default class ImguiApp
         this.imgui = null;
         this.FileBrowser = null;
         this.Log = null;
-        this.showLog = new ValRef(false);
 
         // appServices protocol used by imgui, navigator.clipboard doesn't
         // work in the electron environment.
@@ -55,6 +54,11 @@ export default class ImguiApp
                a.indexOf("ipad") != -1;
         */
     }    
+
+    GetRuntime() // electron, cordova, browser
+    {
+        return this.runtime;
+    }
 
     GetName()
     {
@@ -118,7 +122,7 @@ export default class ImguiApp
         {
             this.ShowContextMenu(this.imgui);
             this.FileBrowser.Show(this.imgui); // manages its own IsOpen state
-            this.Log.Show(this.imgui, "Log", this.showLog);
+            this.Log.Show(this.imgui, "Log");
             this.OnFrame(this.imgui); //
             this.imgui.Render();
         }
@@ -136,8 +140,10 @@ export default class ImguiApp
     {
         if(imgui.BeginPopupContextVoid("ContextMenu", 1))
         {
-            if(imgui.MenuItem("Log", null, this.showLog.get()))
-                this.showLog.toggle();
+            if(imgui.MenuItem("Log", null, this.Log.IsShowing.get()))
+            {
+                this.Log.IsShowing.toggle();
+            }
 
             this.AppendContextMenu(imgui);
 

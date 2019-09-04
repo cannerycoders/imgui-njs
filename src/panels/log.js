@@ -10,16 +10,22 @@ export function GetLog()
     return Singleton;
 }
 
+const MaxEntries = 2000;
+const EntryCullSize = 100;
+
 export class LogWindow
 {
     constructor()
     {
+        this.IsShowing = new ValRef(false);
+
         this.entries = [];
         this.scrollToBottom = true;
         this.filter = null;
         this.lastError = "";
         this.lastErrorLevel = null;
         this.lastMsg = "";
+        this.lastMsgLevel = null;
         this.console = {
             debug: console.debug,
             log: console.log,
@@ -82,14 +88,27 @@ export class LogWindow
         this.log(msg, "ERROR", args);
     }
 
-    GetLastError()
+    GetLastMsg(maxLength=24)
     {
-        return this.lastError;
+        if(maxLength == 0)
+            return this.lastMsg;
+        else
+            return this.lastMsg.slice(0, maxLength)
     }
 
-    GetLastMsg()
+    GetLastMsgColor(imgui)
     {
-        return this.lastMsg;
+        let lev = this.lastMsgLevel;
+        if(!lev) lev = "DEBUG";
+        return imgui.guictx.Style.GetColor(lev);
+    }
+
+    GetLastError(maxLength=24)
+    {
+        if(maxLength == 0)
+            return this.lastError;
+        else
+            return this.lastError.slice(0, maxLength);
     }
 
     GetLastErrorLevel()
@@ -97,9 +116,15 @@ export class LogWindow
         return this.lastErrorLevel;
     }
 
+    GetLastErrorColor(imgui)
+    {
+        let lev = this.lastErrorLevel;
+        if(!lev) lev = "DEBUG";
+        return imgui.guictx.Style.GetColor(lev);
+    }
+
     log(msg, level="INFO", args)
     {
-        this.lastMsg = msg;
         if(msg.message)
             msg = msg.message;
         if(args && args.length > 0)
@@ -107,15 +132,21 @@ export class LogWindow
             msg += ", ";
             msg += args.join(", ");
         }
-        if(level == "WARNING")
-            this.lastErrorLevel = level;
-        else
-        if(level == "ERROR")
+        this.lastMsg = msg;
+        this.lastMsgLevel = level;
+        if(level == "WARNING" || level == "ERROR")
         {
             this.lastErrorLevel = level;
-            this.lastError = msg.slice(0, 35) + "...";
+            this.lastError = msg; 
         }
-        this.entries.push({m: msg, l: level, ts: Date.now()});
+        let now = Date.now();
+        this.entries.push({m: msg, l: level, ts: now});
+        if(this.entries.length > MaxEntries)
+        {
+            this.entries = this.entries.slice(EntryCullSize);
+            this.entries.push({m: "log culled", l: "INFO",  ts: now});
+        }
+
         this.dirty = true;
     }
 
@@ -124,16 +155,28 @@ export class LogWindow
         this.entries = [];
     }
 
-    Show(imgui, winname="Log", isOpen=null)
+    Raise()
     {
-        if(isOpen != null && !isOpen.get()) return;
+        this.IsShowing.set(true);
+        this.raiseRequested = true;
+    }
+
+    Show(imgui, winname="Log")
+    {
+        if(!this.IsShowing.get()) return;
 
         if(!this.filter)
             this.filter = new TextFilter(imgui);
         imgui.SetNextWindowPos(new Vec2(10, 10), CondFlags.FirstUseEver);
         imgui.SetNextWindowSize(new Vec2(580, 200), CondFlags.FirstUseEver);
+        if(this.raiseRequested)
+        {
+            imgui.SetNextWindowCollapsed(false, CondFlags.Always);
+            imgui.SetNextWindowFocus();
+            this.raiseRequested = false;
+        }
         let title = `Log ${this.lastError}##${winname}`;
-        let open = imgui.Begin(title, isOpen);
+        let open = imgui.Begin(title, this.IsShowing);
         if(!imgui.IsWindowCollapsed())
         {
             this.lastError = "";
