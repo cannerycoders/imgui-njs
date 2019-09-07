@@ -65,6 +65,15 @@ export class FileBrowser
         this.imgui = imgui;
     }
 
+    End()
+    {
+    }
+
+    GetDir()
+    {
+        return this.cwd;
+    }
+
     SetDir(dir) // Async
     {
         let ndir = dir.replace(/\\/g, "/"); // backslashes begone!
@@ -87,7 +96,7 @@ export class FileBrowser
         if(this.cwd == "/")
         {
             this.cwdList = ["/"];
-            this.listVolumes(this.readDirCB.bind(this));
+            this.filesys.listVolumes(this.readDirCB.bind(this));
         }
         else
         {
@@ -105,22 +114,24 @@ export class FileBrowser
         }
     }
 
-    GetDir()
-    {
-        return this.cwd;
-    }
-
+    // In order to support multi and single-select,
+    // client is expected to manually close via IsOpen.set(false)
     SetClient(prompt, cb, mode, ext, doopen=true, zIndex=-1)
     {
-        if(typeof(mode == "string"))
+        if(typeof(mode) == "string")
             mode = ClientModes.indexOf(mode);
         this.opMode = mode;
         this.clientCB = cb;
         this.clientPrompt = prompt ? prompt : "View files(s)";
         this.clientExtensions = ext;
         this.zIndex = zIndex;
-        if(doopen && this.IsOpen != null)
+        if(doopen)
+        {
             this.IsOpen.set(true);
+            // need to refresh here in case file system has changed
+            if(this.cwd)
+                this.SetDir(this.cwd);
+        }
     }
 
     GetSelection(asRelative=true)
@@ -206,6 +217,8 @@ export class FileBrowser
                 // button was clicked, so we need to rescan
                 let subset = this.cwdList.slice(0, i+1);
                 let newpath = subset.join("/"); // ["/", "C:"] -> "//C:"
+                if(newpath.indexOf("//") == 0)
+                    newpath = newpath.slice(1);
                 this.SetDir(newpath); // Async
             }
             lastX2 = imgui.GetItemRectMax().x;
@@ -267,7 +280,7 @@ export class FileBrowser
             }
         }
         imgui.PopStyleColor();
-        if (this.opMode == FileBrowserMode.SaveFile)
+        if (this.opMode == FileBrowserMode.SaveFile && this.cwd != "/")
         {
             let id = "Create Folder";
             imgui.PushStyleColor("Text", imgui.GetStyleColor("FBMkDir"));
@@ -520,6 +533,8 @@ export class FileBrowser
             {
                 this.selection = this.cwdFiles[this.selectionIndex-this.cwdSubdirs.length];
                 this.selectionType = "file";
+                if(this.opMode == FileBrowserMode.SaveFile)
+                    this.nameEntry.Set(this.selection);
             }
         }
     }
@@ -573,66 +588,6 @@ export class FileBrowser
                     this.selection = this.cwdSubdirs[0];
                 }
             });
-        }
-    }
-
-    listVolumes(cb)
-    {
-        if(this.imgui.appServices.platform.indexOf("Win32") == -1)
-        {
-            let opts = {withFileTypes: true};
-            this.filesys.readdir(this.cwd, opts, cb);
-        }
-        else
-        {
-            // spawn a cmd child process, pipe the "wmic" command to it
-            // alt take: spawn wmic directly (assumes wmic is in path)
-            // https://stackoverflow.com/questions/15878969/enumerate-system-drives-in-nodejs
-            let cp = window.require("child_process");
-            if(!cp)
-            {
-                console.error("listVolumes missing child_process module");
-                return;
-            }
-            let spawn = cp.spawn;
-            const list = spawn("wmic", ["logicaldisk", "get", "name"]);
-            list.stdout.on("data", (data) =>
-            {
-                // console.log("stdout: " + String(data));
-                const output = String(data);
-                const out = output.split("\r\n").map(e=>e.trim()).filter(e=>e!="");
-                if (out[0]==="Name")
-                {
-                    let ret = [];
-                    // expect items 1-length to be drives
-                    // for now we ignore network drives and cull
-                    // redundant mounts (eclipse seems to introduce one)
-                    for(let vol of out.slice(1))
-                    {
-                        if(vol[1] == ":")
-                        {
-                            let vdir = vol.slice(0, 2); // "C:"
-                            if(ret.indexOf(vdir) == -1)
-                                ret.push(vdir);
-                        }
-                    }
-                    cb(0, ret);
-                }
-            });
-            list.stderr.on("data", function (data) {
-                console.error("stderr: " + data);
-            });
-            list.on("exit", function (code) {
-                if (code !== 0)
-                {
-                    console.error("child process exited with code " + code);
-                    cb(code, []);
-                }
-            });
-
-            //  -- here's the actual command -------------------
-            // list.stdin.write("wmic logicaldisk get name\n");
-            // list.stdin.end();
         }
     }
 }

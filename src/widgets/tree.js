@@ -353,7 +353,7 @@ export var ImguiTreeMixin =
         }
 
         if (is_open && !(flags & TreeNodeFlags.NoTreePushOnOpen))
-        this.treePushRawID(id);
+            this.treePushRawID(id);
         return is_open;
     }, // end treeNodeBehavior
 

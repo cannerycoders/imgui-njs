@@ -20,6 +20,7 @@ export class FileSystem
     {
         let self = this;
         this.runtime = runtime;
+        this.isWindows = false;
         if(runtime == "browser")
         {
             if(window.BrowserFS != undefined)
@@ -50,14 +51,15 @@ export class FileSystem
             let remote = window.require("electron").remote;
             this.fs = remote.require("fs");
             this.path = window.require("path"); 
+            this.isWindows = navigator && 
+                            (navigator.platform.indexOf("Win32") != -1);
         }
         else
         {
-            this.path = require("path");
+            this.path = require("path"); // webpack handles this?
             this.fs = null; // no filesystem here yet (eg: cordova)
         }
     }
-
 
     oninit()
     {
@@ -94,6 +96,66 @@ export class FileSystem
     writeFileSync(pathname, contents, encoding=null, flag)
     {
         return this.fs.writeFileSync(pathname, contents, encoding, flag);
+    }
+
+    listVolumes(cb)
+    {
+        if(this.isWindows)
+        {
+            let opts = {withFileTypes: true};
+            this.filesys.readdir(this.cwd, opts, cb);
+        }
+        else
+        {
+            // spawn a cmd child process, pipe the "wmic" command to it
+            // alt take: spawn wmic directly (assumes wmic is in path)
+            // https://stackoverflow.com/questions/15878969/enumerate-system-drives-in-nodejs
+            let cp = window.require("child_process");
+            if(!cp)
+            {
+                console.error("listVolumes missing child_process module");
+                return;
+            }
+            let spawn = cp.spawn;
+            const list = spawn("wmic", ["logicaldisk", "get", "name"]);
+            list.stdout.on("data", (data) =>
+            {
+                // console.log("stdout: " + String(data));
+                const output = String(data);
+                const out = output.split("\r\n").map(e=>e.trim()).filter(e=>e!="");
+                if (out[0]==="Name")
+                {
+                    let ret = [];
+                    // expect items 1-length to be drives
+                    // for now we ignore network drives and cull
+                    // redundant mounts (eclipse seems to introduce one)
+                    for(let vol of out.slice(1))
+                    {
+                        if(vol[1] == ":")
+                        {
+                            let vdir = vol.slice(0, 2); // "C:"
+                            if(ret.indexOf(vdir) == -1)
+                                ret.push(vdir);
+                        }
+                    }
+                    cb(0, ret);
+                }
+            });
+            list.stderr.on("data", function (data) {
+                console.error("stderr: " + data);
+            });
+            list.on("exit", function (code) {
+                if (code !== 0)
+                {
+                    console.error("child process exited with code " + code);
+                    cb(code, []);
+                }
+            });
+
+            //  -- here's the actual command -------------------
+            // list.stdin.write("wmic logicaldisk get name\n");
+            // list.stdin.end();
+        }
     }
 
     readdir(pathname, opts, cb) // cb(err, string[])

@@ -93,7 +93,7 @@ export class LogWindow
         if(maxLength == 0)
             return this.lastMsg;
         else
-            return this.lastMsg.slice(0, maxLength)
+            return this.lastMsg.slice(0, maxLength);
     }
 
     GetLastMsgColor(imgui)
@@ -153,6 +153,8 @@ export class LogWindow
     Clear()
     {
         this.entries = [];
+        this.lastMsg = "";
+        this.lastError = "";
     }
 
     Raise()
