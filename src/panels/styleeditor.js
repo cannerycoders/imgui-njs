@@ -90,6 +90,14 @@ export class StyleEditor
         {
             if (imgui.BeginTabItem("Sizes"))
             {
+                imgui.Text("Fonts");
+
+                for(let fs in style.FontSizes)
+                {
+                    imgui.SliderInt(fs, style.FontSizes[fs], 8, 32, null,
+                            (newval) => style.FontSizes[fs] = newval);
+                }
+
                 imgui.Text("Main");
                 imgui.SliderFloat("TextLineHeightPct", style.TextLineHeightPct,
                                 .4, 2, "%.2f", 1,
