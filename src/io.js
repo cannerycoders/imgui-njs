@@ -662,8 +662,8 @@ export class IO
             // ClearInputCharacters called during imgui.EndFrame(0)
 
             // since we defer delivery of events, we can't leave it to
-            // client to invoke evt.preventDefault.  There is a knob,
-            //  WantCaptureKeyboard (invoked vrom )
+            // client to invoke evt.preventDefault.  See also 
+            // . this.WantCaptureKeyboard above.
             if(!this.isSystemEvent(evt))
                 evt.preventDefault();
         }
@@ -673,27 +673,44 @@ export class IO
     // this is a matter of policy, perhaps user-configuration required?
     isSystemEvent(evt)
     {
+        let issystem = false;
         if(this.imgui.appServices.platform.indexOf("Mac") != -1)
         {
             // cmd-alt-j
-            if(evt.metaKey && evt.altKey &&
-               evt.code == "KeyI")
-                return true;
+            if(evt.shiftKey && evt.metaKey && event.code == "KeyI")
+                issystem = true;
+            else
+            if(evt.shiftKey && evt.metaKey && event.code == "KeyC")
+                issystem = true;
+            else
+            if(evt.metaKey && event.code == "KeyR")
+                issystem = true;
         }
         else
         {
             // ctrl-shift-I is dev-inspector
-            if(evt.shiftKey && evt.ctrlKey &&
-               evt.key.toUpperCase() == "I")
-                return true;
+            if(evt.shiftKey && evt.ctrlKey && evt.key.toUpperCase() == "I")
+                issystem = true;
             if(evt.ctrlKey && evt.code == "KeyR") // Reload in electron
-                return true;
+                issystem = true;
         }
         if(evt.code == "F11" || // F11 is fullscreen
            evt.code == "F12")  // F12 is inspector
-            return true;
-        // F11
-        return false;
+            issystem = true;
+
+        if(false)
+        {
+            // electron on mac doesn't react to certain system events
+            //  cmd-R works, shift-cmd-I/C don't.
+            console.log(event.code + 
+                    `\nmeta: ${evt.metaKey} ` +
+                    `\nalt: ${event.altKey} ` +
+                    `\nshift: ${event.shiftKey}` +
+                    `\nplatform: ${this.imgui.appServices.platform}`);
+            if(issystem)
+                console.log("is a system key combination!");
+        }
+        return issystem;
     }
 
     onKeyUp(evt/*KeyboardEvent*/)
