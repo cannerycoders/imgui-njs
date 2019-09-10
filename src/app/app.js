@@ -94,7 +94,8 @@ export default class ImguiApp
         this.imgui = new Imgui(this.canvas, this.appname, this);
         this.imgui.guictx.SettingsHandlers.push(this.prefs);
         this.imgui.LoadIniSettingsFromDisk();
-        this.Log = new Log(this.imgui);
+        this.Log = new Log(this);
+        this.Log.Begin(this.imgui);
         this.FileBrowser = new FileBrowser(this.filesystem, this.prefs); // Begin below
         this.FileBrowser.Begin(this.imgui);
 

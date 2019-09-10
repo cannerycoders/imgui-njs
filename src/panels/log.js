@@ -15,8 +15,9 @@ const EntryCullSize = 100;
 
 export class LogWindow
 {
-    constructor()
+    constructor(app)
     {
+        this.app = app;
         this.IsShowing = new ValRef(false);
 
         this.entries = [];
@@ -103,6 +104,11 @@ export class LogWindow
         return imgui.guictx.Style.GetColor(lev);
     }
 
+    GetLastMsgLevel()
+    {
+        return this.lastMsgLevel;
+    }
+
     GetLastError(maxLength=24)
     {
         if(maxLength == 0)
@@ -155,13 +161,19 @@ export class LogWindow
         this.entries = [];
         this.lastMsg = "";
         this.lastError = "";
+        this.lastMsgLevel = "";
     }
 
     Raise()
     {
         this.IsShowing.set(true);
         this.raiseRequested = true;
+        this.lastMsg = "";
+        this.lastMsgLevel = "";
     }
+
+    Begin(imgui)
+    {}
 
     Show(imgui, winname="Log")
     {
@@ -169,8 +181,16 @@ export class LogWindow
 
         if(!this.filter)
             this.filter = new TextFilter(imgui);
-        imgui.SetNextWindowPos(new Vec2(10, 10), CondFlags.FirstUseEver);
-        imgui.SetNextWindowSize(new Vec2(580, 200), CondFlags.FirstUseEver);
+        if(this.app.IsMobileDevice())
+        {
+            imgui.SetNextWindowPos(new Vec2(0,0))
+            imgui.SetNextWindowSize(imgui.guictx.IO.DisplaySize);
+        }
+        else
+        {
+            imgui.SetNextWindowPos(new Vec2(10, 10), CondFlags.FirstUseEver);
+            imgui.SetNextWindowSize(new Vec2(580, 200), CondFlags.FirstUseEver);
+        }
         if(this.raiseRequested)
         {
             imgui.SetNextWindowCollapsed(false, CondFlags.Always);

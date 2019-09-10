@@ -44,6 +44,7 @@ export var ButtonFlags =
 export var Icons =
 {
     RightArrow: String.fromCodePoint(0x25B6),
+    RightArrow2: String.fromCodePoint(0x25BA),
     DownArrow: String.fromCodePoint(0x25BC),
 };
 
@@ -331,6 +332,15 @@ export var ImguiButtonMixin =
     // icons may be available in current font https://graphemica.com/
     Button(label, size_arg=Vec2.Zero(), flags=0)
     {
+        return this.ButtonEx(label, size_arg, flags);
+    },
+
+    PopupButton(label, size_arg=Vec2.Zero(), flags=0)
+    {
+        let fields = label.split("##");
+        label = fields[0] + " " + Icons.RightArrow;
+        if(fields.length == 2)
+            label += "##" + fields[1];
         return this.ButtonEx(label, size_arg, flags);
     },
 
