@@ -88,7 +88,7 @@ export class LogWindow
         this.log(msg, "ERROR", args);
     }
 
-    GetLastMsg(maxLength=24)
+    GetLastMsg(maxLength=0)
     {
         if(maxLength == 0)
             return this.lastMsg;
@@ -186,20 +186,18 @@ export class LogWindow
         }
         if(open)
         {
+            let toClipboard = null;
             this.lastError = "";
             if (imgui.Button("Clear"))
                 this.Clear();
             imgui.SameLine();
-            let copy = false;
-            //    bool copy = imgui.Button("Copy");
-            //    imgui.SameLine();
+            if (imgui.Button("Copy"))
+                toClipboard = [];
+            imgui.SameLine();
             this.filter.Draw("Filter", 100);
             imgui.Separator();
             imgui.BeginChild("scrolling", new Vec2(0,0), false,
                                 WindowFlags.HorizontalScrollbar);
-            if (copy)
-                imgui.LogToClipboard();
-
             if(this.entries.length)
             {
                 imgui.PushFont("monospace");
@@ -217,13 +215,18 @@ export class LogWindow
                     let c = imgui.guictx.Style.GetColor(entry.l);
                     if(c)
                         imgui.PushStyleColor("Text",  c);
+                    let head = this.formatEntryHead(entry);
                     imgui.Text(this.formatEntryHead(entry));
                     if(c)
                         imgui.PopStyleColor();
                     imgui.SameLine();
                     imgui.Text(". %s", msg);
+                    if(toClipboard)
+                        toClipboard.push(`${head} . ${msg}`);
                 }
                 imgui.PopFont();
+                if(toClipboard)
+                    imgui.SetClipboardText(toClipboard.join("\n"));
             }
             if (this.dirty)
             {

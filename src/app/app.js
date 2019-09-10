@@ -15,7 +15,7 @@ export default class ImguiApp
 {
     constructor(appname="UntitledImguiApp", version="1.0.0")
     {
-        console.info("App Init " + new Date().toLocaleString());
+        console.debug("App Init " + new Date().toLocaleString());
         this.appname = appname;
         this.version = version;
         this.prefs = new Prefs(this.appname);
@@ -98,9 +98,9 @@ export default class ImguiApp
         this.FileBrowser = new FileBrowser(this.filesystem, this.prefs); // Begin below
         this.FileBrowser.Begin(this.imgui);
 
-        console.info(`${this.appname} Begin ${new Date().toLocaleString()}`);
-        console.info(`  version: ${this.version}`);
-        console.info(`  ${this.imgui.GetVersion()}`);
+        console.debug(`${this.appname} Begin ${new Date().toLocaleString()}`);
+        console.debug(`  version: ${this.version}`);
+        console.debug(`  ${this.imgui.GetVersion()}`);
         onReady(0);
     }
 

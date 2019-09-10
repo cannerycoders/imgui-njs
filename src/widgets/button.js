@@ -250,7 +250,7 @@ export var ImguiButtonMixin =
         if (win.SkipItems) return false;
 
         let id = win.GetID(label);
-        let labelsize = this.CalcTextSize(label, true); // Vec2
+        let labelsize = this.CalcTextSize(label, true, 100); // Vec2
         let textpos = new Vec2(win.DC.CursorPos.x,
                         win.DC.CursorPos.y + win.DC.CurrentLineTextBaseOffset);
         let bb = new Rect(textpos, Vec2.Add(textpos, labelsize));
