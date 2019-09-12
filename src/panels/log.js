@@ -26,7 +26,7 @@ export class LogWindow
         this.lastError = "";
         this.lastErrorLevel = null;
         this.lastMsg = "";
-        this.lastMsgLevel = null;
+        this.lastMsgLevel = "";
         this.console = {
             debug: console.debug,
             log: console.log,
