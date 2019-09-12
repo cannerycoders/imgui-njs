@@ -58,7 +58,8 @@ const ValidChars =
 };
 
 const MaxDisplayLength = 2 * 1024 * 1024; // 2M chars (seems like a lot!)o
-let DOMTextEditing = null; 
+let DOMTextEditing = null;  // in order to trigger mobile input, we expose 
+                            // input text fields to the DOM.
 
 // Internal state of the currently focused/edited text input box
 // This is stored on guictx and valid for <= 1 active/focused text
@@ -146,7 +147,7 @@ export class InputTextState // NB: contains TextEditState
                     // unless enter is pressed (13) because auto-correct, etc
                     this.domElement.onkeyup = (evt) => 
                     {
-                        if(evt.keyCode == 13)
+                        if(evt.keyCode == 13) // Enter
                         {
                             // Transfer text from domElement to our internal state.
                             // dismiss overlay.

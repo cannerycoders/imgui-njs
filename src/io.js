@@ -438,8 +438,9 @@ export class IO
 
         this.DisplaySize.x = this.canvas.scrollWidth;
         this.DisplaySize.y = this.canvas.scrollHeight;
-        this.DisplayOffset.x = this.canvas.offsetLeft;
-        this.DisplayOffset.y = this.canvas.offsetTop;
+        let cbound = this.canvas.getBoundingClientRect();
+        this.DisplayOffset.x = cbound.x;
+        this.DisplayOffset.y = cbound.y;
 
         const dt = time - this.PrevTime;
         this.PrevTime = time;
