@@ -33,6 +33,7 @@ export class LogWindow
             info: console.info,
             warn: console.warn,
             error: console.error,
+            alert: window.alert
         };
         if(!Singleton)
         {
@@ -51,6 +52,7 @@ export class LogWindow
             console.log = this.Notice.bind(this);
             console.warn = this.Warning.bind(this);
             console.error = this.Error.bind(this);
+            window.alert = this.Alert.bind(this);
         }
         else
         {
@@ -59,6 +61,7 @@ export class LogWindow
             console.log = this.console.log;
             console.warn = this.console.warn;
             console.error = this.console.error;
+            window.alert = this.console.alert;
         }
     }
 
@@ -87,6 +90,23 @@ export class LogWindow
     Error(msg, ...args)
     {
         this.log(msg, "ERROR", args);
+    }
+
+    Alert(msg, ...args)
+    {
+        var x = document.getElementById("Alert");
+        if(x)
+        {
+            x.className = "show";
+            x.innerHTML = `<span>${msg}${args}</span>`;
+            setTimeout(() => 
+            { 
+                x.className = ""; 
+                x.innerHTML = "";
+            }, 3000);
+        }
+        else
+            this.log(msg, "ALERT", args);
     }
 
     GetLastMsg(maxLength=0)
@@ -133,6 +153,8 @@ export class LogWindow
     {
         if(msg.message)
             msg = msg.message;
+        if(typeof(msg) == "object")
+            msg = JSON.stringify(msg);
         if(args && args.length > 0)
         {
             msg += ", ";
@@ -140,7 +162,7 @@ export class LogWindow
         }
         this.lastMsg = msg;
         this.lastMsgLevel = level;
-        if(level == "WARNING" || level == "ERROR")
+        if(level == "WARNING" || level == "ERROR" || level == "ALERT")
         {
             this.lastErrorLevel = level;
             this.lastError = msg; 
