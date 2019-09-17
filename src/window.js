@@ -963,7 +963,8 @@ export class GroupData
         this.BackupCursorMaxPos = win.DC.CursorMaxPos.Clone(); // Vec2
         this.BackupIndent = win.DC.Indent.Clone(); // Vec1
         this.BackupGroupOffset = win.DC.GroupOffset.Clone(); // Vec1
-        this.BackupCurrentLineSize = win.DC.CurrentLineSize.Clone();
+        this.BackupCurrentLineHeight = win.DC.CurrentLineHeight;
+        this.BackupCurrentLineHeightMax = win.DC.CurrentLineHeightMax;
         this.BackupCurrentLineTextBaseOffset = win.DC.CurrentLineTextBaseOffset;
         this.BackupActiveIdIsAlive = guictx.ActiveIdIsAlive;
         this.BackupActiveIdPreviousFrameIsAlive = guictx.ActiveIdPreviousFrameIsAlive;
@@ -984,8 +985,10 @@ export class WindowTempData
         // growing during the frame. Turned into window.SizeContents at the
         // beginning of next frame
         DC.CursorMaxPos = new Vec2(0,0);
-        DC.CurrentLineSize = new Vec2(0,0);
-        DC.PrevLineSize = new Vec2(0,0);
+        DC.CurrentLineHeight = 0;
+        DC.CurrentLineHeightMax = 0;
+        DC.PrevLineHeight = 0;
+        DC.PrevLineHeightMax = 0;
         DC.CurrentLineTextBaseOffset = 0.;
         DC.PrevLineTextBaseOffset = 0.;
         DC.TreeDepth = 0;

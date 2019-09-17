@@ -187,7 +187,7 @@ export var ImguiTreeMixin =
 
         // We vertically grow up to current line height up the typical widget height.
         const text_base_offset_y = Math.max(padding.y, win.DC.CurrentLineTextBaseOffset); // Latch before ItemSize changes it
-        const frame_height = Math.max(Math.min(win.DC.CurrentLineSize.y,
+        const frame_height = Math.max(Math.min(win.DC.CurrentLineHeight,
                                             g.FontSize+style.FramePadding.y*2),
                                       label_size.y + padding.y*2);
         let frame_bb = Rect.FromXY(win.DC.CursorPos,

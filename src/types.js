@@ -213,10 +213,14 @@ export class Vec2
         return clone ? sMaxNegValue.Clone() : sMaxNegValue;
     }
 
-    static Add(a, b)
+    static Add(a, b, c)
     {
         if(typeof(b) == "number")
-            return new Vec2(a.x + b, a.y + b);
+        {
+            if(c==undefined)
+                c = b;
+            return new Vec2(a.x + b, a.y + c);
+        }
         else
             return new Vec2(a.x + b.x, a.y + b.y);
     }

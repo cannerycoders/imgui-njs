@@ -335,12 +335,14 @@ export class Style extends SettingsHandler
             // specific number of segments. Decrease for highly tessellated
             // curves (higher quality, more polygons), increase to reduce quality.
 
-        this.FontSizes =
+        this.FontSizes = // NB: values changed here may not "take" since 
+                         //  style prefs are saved
         {
+            "Small": 9,
             "Std": 10,
             "Med": 15,
             "Big": 20,
-            "Small": 9,
+            "Huge": 32,
         };
 
         this.SetColorScheme("DarkColors");
@@ -359,7 +361,33 @@ export class Style extends SettingsHandler
             "MedFixed": ["SourceCodePro", "Med", "normal"],
             "BigFixed": ["SourceCodePro", "Big", "normal"],
             "Icons": ["Material Icons", "Std", "normal"],
-            "BigIcons": ["Material Icons", "Big", "normal"],
+            "BigIcons": ["Material Icons", "Huge", "normal"],
+        };
+
+        // currently tied to MaterialIcons
+        //  https://material.io/resources/icons/?style=baseline
+        //  https://github.com/google/material-design-icons/blob/master/iconfont/codepoints
+        this.MIcons =
+        {
+            Info: String.fromCharCode(0x0e88e),
+            InfoOutline: String.fromCharCode(0x0e88f),
+            NoMute: String.fromCharCode(0x0e050),
+            Note: String.fromCharCode(0x0e3a1), // audiotrack
+            Menu: String.fromCharCode(0x0e5d2), // ie hamburge
+            Mute: String.fromCharCode(0x0e04f),
+            Pause: String.fromCharCode(0x0e034),
+            PickFile: String.fromCharCode(0x0e2c8),
+            Play: String.fromCharCode(0x0e037),
+            Stop: String.fromCharCode(0x0e047),
+            Warning: String.fromCharCode(0x0e002),
+        };
+
+        // unicode character codes (font-independent-ish)
+        // https://graphemica.com/
+        this.UIcons =
+        {
+            NavIcon: String.fromCodePoint(0x2630), //  hamburger
+            InfoIcon: String.fromCodePoint(0x2139), // 0x1f6c8 circled information source
         };
 
         // stuff not subject to encapsulation should start with _

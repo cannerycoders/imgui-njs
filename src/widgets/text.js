@@ -311,7 +311,7 @@ export var ImguiTextMixin =
         const label_size = this.CalcTextSize(text, false);
         // Latch before ItemSize changes it
         const text_base_offset_y = Math.max(0, win.DC.CurrentLineTextBaseOffset);
-        const line_height = Math.max(Math.min(win.DC.CurrentLineSize.y,
+        const line_height = Math.max(Math.min(win.DC.CurrentLineHeight,
                                         g.FontLineHeight + g.Style.FramePadding.y*2),
                                     g.FontSize);
         // Empty text doesn't add padding

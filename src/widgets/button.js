@@ -686,7 +686,7 @@ export var ImguiButtonMixin =
 
         let g = this.guictx;
         const style = g.Style;
-        const line_height = Math.max(Math.min(win.DC.CurrentLineSize.y,
+        const line_height = Math.max(Math.min(win.DC.CurrentLineHeight,
                                         g.FontLineHeight + g.Style.FramePadding.y*2),
                                     g.FontLineHeight);
         const bb = new Rect(win.DC.CursorPos,

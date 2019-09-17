@@ -117,7 +117,8 @@ export var ImguiColumnMixin =
         }
         win.DC.CursorPos.x = Math.floor(win.Pos.x + win.DC.Indent.x + win.DC.ColumnsOffset.x);
         win.DC.CursorPos.y = columns.LineMinY;
-        win.DC.CurrentLineSize = Vec2.Zero();
+        win.DC.CurrentLineHeight = 0;
+        win.DC.CurrentLineHeightMax = 0;
         win.DC.CurrentLineTextBaseOffset = 0;
 
         this.pushColumnClipRect();

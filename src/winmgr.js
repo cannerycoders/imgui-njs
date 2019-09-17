@@ -699,8 +699,10 @@ export var ImguiWinMgrMixin =
             win.DC.CursorPos.Copy(win.DC.CursorStartPos);
             win.DC.CursorPosPrevLine.Copy(win.DC.CursorPos);
             win.DC.CursorMaxPos.Copy(win.DC.CursorStartPos);
-            win.DC.CurrentLineSize = new Vec2(0,0);
-            win.DC.PrevLineSize = new Vec2(0, 0);
+            win.DC.CurrentLineHeight = 0;
+            win.DC.CurrentLineHeightMax = 0;
+            win.DC.PrevLineHeight = 0;
+            win.DC.PrevLineHeightMax = 0;
             win.DC.CurrentLineTextBaseOffset = win.DC.PrevLineTextBaseOffset = 0;
             win.DC.NavHideHighlightOneFrame = false;
             win.DC.NavHasScroll = (this.getWindowScrollMaxY(win) > 0);
@@ -1530,7 +1532,7 @@ export var ImguiWinMgrMixin =
         // Top of last item, in window space
         let target_y = win.DC.CursorPosPrevLine.y - win.Pos.y;
         // Precisely aim above, in the middle or below the last line.
-        target_y += (win.DC.PrevLineSize.y * center_y_ratio) +
+        target_y += (win.DC.PrevLineHeight * center_y_ratio) +
             (this.guictx.Style.ItemSpacing.y * (center_y_ratio - 0.5) * 2.);
         this.SetScrollFromPosY(target_y, center_y_ratio);
     },

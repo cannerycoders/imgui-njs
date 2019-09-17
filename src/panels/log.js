@@ -120,8 +120,10 @@ export class LogWindow
     GetLastMsgColor(imgui)
     {
         let lev = this.lastMsgLevel;
-        if(!lev) lev = "DEBUG";
-        return imgui.guictx.Style.GetColor(lev);
+        if(lev)
+            return imgui.guictx.Style.GetColor(lev);
+        else
+            return imgui.guictx.Style.GetColor("TextDisabled");
     }
 
     GetLastMsgLevel()

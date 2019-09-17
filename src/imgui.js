@@ -627,9 +627,9 @@ export class Imgui extends ImguiMixins
         return g.Style.TextLineHeightPct; // usually in the range (.75-1.5)
     }
 
-    PushFont(font)
+    PushFont(font, fixBaseline=false)
     {
-        if(typeof(font) =="string")
+        if(typeof(font) == "string")
             font = this.guictx.Style.GetFont(font);
 
         if(!font)
@@ -637,15 +637,19 @@ export class Imgui extends ImguiMixins
 
         this.guictx.FontStack.push(font);
         this.SetFont(font);
+        if(fixBaseline)
+            this.AlignTextToFrameCenter();
     }
 
-    PopFont()
+    PopFont(fixBaseline=false)
     {
         this.guictx.FontStack.pop();
         let font = this.guictx.FontStack[this.guictx.FontStack.length-1];
         if(!font)
             font = this.getDefaultFont();
         this.SetFont(font);
+        if(fixBaseline)
+            this.AlignTextToFrameCenter(true);
     }
 
     getDefaultFont()

@@ -32,7 +32,8 @@ class GroupData
         this.BackupCursorMaxPos = win.DC.CursorMaxPos.Clone(); // Vec2
         this.BackupIndent = win.DC.Indent.Clone(); // Vec1
         this.BackupGroupOffset = win.DC.GroupOffset.Clone(); // Vec1
-        this.BackupCurrentLineSize = win.DC.CurrentLineSize.Clone();
+        this.BackupCurrentLineHeight = win.DC.CurrentLineHeight;
+        this.BackupCurrentLineHeightMax = win.DC.CurrentLineHeightMax;
         this.BackupCurrentLineTextBaseOffset = win.DC.CurrentLineTextBaseOffset;
         this.BackupActiveIdIsAlive = guictx.ActiveIdIsAlive;
         this.BackupActiveIdPreviousFrameIsAlive = guictx.ActiveIdPreviousFrameIsAlive;
@@ -68,7 +69,8 @@ export var ImguiLayoutMixin =
             win.DC.CursorPos.x = win.DC.CursorPosPrevLine.x + spacing_w;
             win.DC.CursorPos.y = win.DC.CursorPosPrevLine.y;
         }
-        win.DC.CurrentLineSize.Copy(win.DC.PrevLineSize);
+        win.DC.CurrentLineHeight = win.DC.PrevLineHeight;
+        win.DC.CurrentLineHeightMax = win.DC.PrevLineHeightMax;
         win.DC.CurrentLineTextBaseOffset = win.DC.PrevLineTextBaseOffset;
     },
 
@@ -128,15 +130,25 @@ export var ImguiLayoutMixin =
         let g = this.guictx;
         let backup_layout_type = win.DC.LayoutType;
         win.DC.LayoutType = LayoutType.Vertical;
-        // In the event that we are on a line with items that is smaller that
-        // FontLineHeight, we will preserve its height.
-        if (win.DC.CurrentLineSize.y > 0)
+        // In the event that we are on a line with items that are smaller than
+        // FontLineHeight, we will preserve that height.
+        if (win.DC.CurrentLineHeight > 0)
             this.itemSize(Vec2.Zero());
         else
             this.itemSize(new Vec2(0, g.FontLineHeight));
         win.DC.LayoutType = backup_layout_type;
     },
 
+    // text alignment notes:
+    //    CursorPos is the overall arbiter
+    //      text_pos = new Vec2(win.DC.CursorPos.x, 
+    //                      win.DC.CursorPos.y + win.DC.CurrentLineTextBaseOffset);
+    //    Font drawing applies it's font-metrics to "find a baseline".
+    //    CurrentLineTextBaseOffset is from the top, ie: 0 is the default.
+    //    CurrentLineHeight 
+    //          * is managed by this file (though it may be zeroed elsewhere)
+    //          * is used by button, text, tree
+    //  
     AlignTextToFramePadding()
     {
         let win = this.getCurrentWindow();
@@ -144,10 +156,40 @@ export var ImguiLayoutMixin =
             return;
 
         let g = this.guictx;
-        win.DC.CurrentLineSize.y = Math.max(win.DC.CurrentLineSize.y,
-                                            g.FontLineHeight + g.Style.FramePadding.y * 2);
+        let next = Math.max(win.DC.CurrentLineHeight,
+                        g.FontLineHeight + g.Style.FramePadding.y * 2);
+        win.DC.CurrentLineHeight = next;
+        win.DC.CurrentLineHeightMax = Math.max(win.DC.CurrentLineHeightMax, next);
         win.DC.CurrentLineTextBaseOffset = Math.max(win.DC.CurrentLineTextBaseOffset,
                                             g.Style.FramePadding.y);
+    },
+
+    // NB this depends on the current font... we adjust the text baseoffset
+    AlignTextToFrameCenter(prevLine=false)
+    {
+        let win = this.getCurrentWindow();
+        if (win.SkipItems)
+            return;
+
+        let g = this.guictx;
+        let next = g.FontLineHeight + g.Style.FramePadding.y * 2;
+        if(prevLine)
+        {
+            // this case is useful to handle a PopFont(),SameLine() sequence
+            let max = win.DC.PrevLineHeightMax;
+            win.DC.PrevLineHeight = next;
+            win.DC.PrevLineHeightMax = Math.max(max, next);
+            win.DC.PrevLineTextBaseOffset = Math.max(0, 
+                    Math.floor(.5 * (win.DC.PrevLineHeightMax - next)));
+        }
+        else
+        {
+            let max = win.DC.CurrentLineHeightMax;
+            win.DC.CurrentLineHeight = next;
+            win.DC.CurrentLineHeightMax = Math.max(max, next);
+            win.DC.CurrentLineTextBaseOffset = Math.max(0, 
+                    Math.floor(.5 * (win.DC.CurrentLineHeightMax - next)));
+        }
     },
 
     // Horizontal/vertical separating line
@@ -211,7 +253,7 @@ export var ImguiLayoutMixin =
             return;
         let g = this.guictx;
         let y1 = win.DC.CursorPos.y;
-        let y2 = win.DC.CursorPos.y + win.DC.CurrentLineSize.y;
+        let y2 = win.DC.CursorPos.y + win.DC.CurrentLineHeightMax;
         const bb = Rect.FromXY(win.DC.CursorPos.x, y1,
                             win.DC.CursorPos.x + 1, y2);
         this.itemSize(new Vec2(bb.GetWidth(), 0.));
@@ -303,7 +345,8 @@ export var ImguiLayoutMixin =
                                     - win.DC.ColumnsOffset.x;
         win.DC.Indent = win.DC.GroupOffset;
         win.DC.CursorMaxPos.Copy(win.DC.CursorPos);
-        win.DC.CurrentLineSize.CopyXY(0, 0);
+        win.DC.CurrentLineHeight = 0;
+        win.DC.CurrentLineHeightMax = 0;
         if (g.LogEnabled)
             g.LogLinePosY = -Number.MAX_VALUE; // To enforce Log carriage return
     },
@@ -326,7 +369,8 @@ export var ImguiLayoutMixin =
                                           win.DC.CursorMaxPos);
         win.DC.Indent = group_data.BackupIndent;
         win.DC.GroupOffset = group_data.BackupGroupOffset;
-        win.DC.CurrentLineSize = group_data.BackupCurrentLineSize;
+        win.DC.CurrentLineHeight = group_data.BackupCurrentLineHeight;
+        win.DC.CurrentLineHeightMax = group_data.BackupCurrentLineHeightMax;
         win.DC.CurrentLineTextBaseOffset = group_data.BackupCurrentLineTextBaseOffset;
         if (g.LogEnabled)
             g.LogLinePosY = -Number.MAX_VALUE; // To enforce Log carriage return
@@ -447,7 +491,8 @@ export var ImguiLayoutMixin =
         // If we end up needing more accurate data (to e.g. use SameLine) we
         // may as well make the clipper have a fourth step to let user process
         // and display the last item in their list.
-        win.DC.PrevLineSize.y = (line_height - this.guictx.Style.ItemSpacing.y);
+        win.DC.PrevLineHeight = (line_height - this.guictx.Style.ItemSpacing.y);
+        win.DC.PrevLineHeightMax = win.DC.PrevLineHeight;
         if (win.DC.CurrentColumns)
         {
             // Setting this so that cell Y position are set properly
@@ -496,9 +541,14 @@ export var ImguiLayoutMixin =
         }
 
         // Always align ourselves on pixel boundaries
-        const line_height = Math.max(win.DC.CurrentLineSize.y, size.y);
+        const line_height = Math.max(win.DC.CurrentLineHeight, size.y);
         const text_base_offset = Math.max(win.DC.CurrentLineTextBaseOffset, text_offset_y);
-        //if (g.IO.KeyAlt) win.DrawList.AddRect(win->DC.CursorPos, win.DC.CursorPos + ImVec2(size.x, line_height), IM_COL32(255,0,0,200)); // [DEBUG]
+        if (g.IO.KeyAlt) 
+        {
+            win.DrawList.AddRect(win.DC.CursorPos, 
+                                 Vec2.AddXY(win.DC.CursorPos, size.x, line_height), 
+                                 g.Style.GetColor("_DEBUG2"));
+        }
         win.DC.CursorPosPrevLine = new Vec2(win.DC.CursorPos.x + size.x,
                                                win.DC.CursorPos.y);
         win.DC.CursorPos.x = Math.floor(win.Pos.x + win.DC.Indent.x +
@@ -516,9 +566,11 @@ export var ImguiLayoutMixin =
         }
         //if (g.IO.KeyAlt) win.DrawList->AddCircle(window.DC.CursorMaxPos, 3.0f, IM_COL32(255,0,0,255), 4); // [DEBUG]
 
-        win.DC.PrevLineSize.y = line_height;
+        win.DC.PrevLineHeight = line_height;
+        win.DC.PrevLineHeightMax = Math.max(line_height, win.DC.CurrentLineHeightMax);
         win.DC.PrevLineTextBaseOffset = text_base_offset;
-        win.DC.CurrentLineSize.y = win.DC.CurrentLineTextBaseOffset = 0;
+        win.DC.CurrentLineHeight = win.DC.CurrentLineTextBaseOffset = 0;
+        win.DC.CurrentLineHeightMax = 0;
 
         // Horizontal layout mode
         if (win.DC.LayoutType == LayoutType.Horizontal)
@@ -571,7 +623,10 @@ export var ImguiLayoutMixin =
         const is_clipped = this.isClippedEx(bb, id, false);
         if (is_clipped)
             return false;
-        //if (g.IO.KeyAlt) win.DrawList.AddRect(bb.Min, bb.Max, IM_COL32(255,255,0,120)); // [DEBUG]
+        if (g.IO.KeyAlt) 
+        {
+            win.DrawList.AddRect(bb.Min, bb.Max, g.Style.GetColor("_DEBUG1"));
+        }
 
         // We need to calculate this now to take account of the current clipping
         // rectangle (as items like Selectable may change them)
