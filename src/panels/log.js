@@ -180,12 +180,14 @@ export class LogWindow
         this.dirty = true;
     }
 
-    Clear()
+    Clear(doClose=true)
     {
         this.entries = [];
         this.lastMsg = "";
         this.lastError = "";
         this.lastMsgLevel = "";
+        if(doClose)
+            this.IsShowing.set(false);
     }
 
     Raise()
