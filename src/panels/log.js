@@ -209,7 +209,7 @@ export class LogWindow
             this.filter = new TextFilter(imgui);
         if(this.app.IsMobileDevice())
         {
-            imgui.SetNextWindowPos(new Vec2(0,0))
+            imgui.SetNextWindowPos(new Vec2(0,0));
             imgui.SetNextWindowSize(imgui.guictx.IO.DisplaySize);
         }
         else

@@ -35,7 +35,7 @@ DarkColors.Header = rgba(0.26, 0.59, 0.98, 0.31);
 DarkColors.HeaderActive = rgba(0.26, 0.59, 0.98, 1.00);
 DarkColors.HeaderHovered = rgba(0.26, 0.59, 0.98, 0.80);
 DarkColors.Link = rgb(.3, .6, .9);
-DarkColors.LinkActive = rgb(.4, .8, 1);
+DarkColors.LinkActive = rgb(.2, .9, .7);
 DarkColors.LinkHovered = rgb(.4, .6, 1);
 DarkColors.MenuBarBg = rgba(0.14, 0.14, 0.14, 1.);
 DarkColors.ModalWindowDimBg = rgba(0.80, 0.80, 0.80, 0.35);
@@ -72,6 +72,7 @@ DarkColors.TabUnfocused = Color.Lerp(c.Tab, bg, 0.8);
 DarkColors.TabUnfocusedActive = Color.Lerp(c.TabActive, bg, 0.4);
 DarkColors.Text = rgb(.9, .9, .9);
 DarkColors.TextDisabled = rgb(0.5, 0.5, 0.5);
+DarkColors.TextEmphasized = rgb(0.8, 1, 0.8);
 DarkColors.TextHighlighted = rgbi(25, 211, 97);
 DarkColors.TextError = CSSColors.darkorange;
 DarkColors.TextSelectedBg = rgba(0.26, 0.59, 0.98, 0.35);
@@ -147,6 +148,7 @@ ClassicColors.TabUnfocused = Color.Lerp(c.Tab, c.TitleBg, 0.80);
 ClassicColors.TabUnfocusedActive = Color.Lerp(c.TabActive, c.TitleBg, 0.40);
 ClassicColors.Text = rgba(0.90, 0.90, 0.90, 1.00);
 ClassicColors.TextDisabled = rgba(0.60, 0.60, 0.60, 1.00);
+ClassicColors.TextEmphasized = rgba(0.60, 0.80, 0.60, 1.00);
 ClassicColors.TextError = CSSColors.darkorange;
 ClassicColors.TextSelectedBg = rgba(0.00, 0.00, 1.00, 0.35);
 ClassicColors.TitleBg = rgba(0.27, 0.27, 0.54, 0.83);
@@ -210,6 +212,7 @@ LightColors.TabUnfocused = Color.Lerp(c.Tab, c.TitleBg, 0.80);
 LightColors.TabUnfocusedActive = Color.Lerp(c.TabActive, c.TitleBg, 0.40);
 LightColors.Text = rgba(0.00, 0.00, 0.00, 1.00);
 LightColors.TextDisabled = rgba(0.60, 0.60, 0.60, 1.00);
+LightColors.TextEmphasized = rgba(0.0, 0.20, 0.00, 1.00);
 LightColors.TextError = CSSColors.darkorange;
 LightColors.TextSelectedBg = rgba(0.26, 0.59, 0.98, 0.35);
 LightColors.TitleBg = rgba(0.96, 0.96, 0.96, 1.00);
@@ -348,7 +351,7 @@ export class Style extends SettingsHandler
         this.SetColorScheme("DarkColors");
 
         // Font abstractions
-        this.Fonts =
+        this.Fonts = // NB: changing this table may not "take" in stored prefs (XXX)
         {
             "Default": ["Exo", "Std", "normal"],
             "Label": ["Exo", "Std", "bold"],
@@ -361,7 +364,8 @@ export class Style extends SettingsHandler
             "MedFixed": ["SourceCodePro", "Med", "normal"],
             "BigFixed": ["SourceCodePro", "Big", "normal"],
             "Icons": ["Material Icons", "Std", "normal"],
-            "BigIcons": ["Material Icons", "Huge", "normal"],
+            "BigIcons": ["Material Icons", "Big", "normal"],
+            "HugeIcons": ["Material Icons", "Huge", "normal"],
         };
 
         // currently tied to MaterialIcons

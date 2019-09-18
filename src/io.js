@@ -47,6 +47,9 @@ export class IO
         // When holding a key/button, time before it starts repeating, in
         // seconds (for buttons in Repeat mode, etc.).
         this.KeyRepeatDelay = 0.25;
+        // When holding a button, time before the click-release is
+        // deemed acceptable.  See ButtonFlags.Long
+        this.LongPressInterval = .75; // sec (apple defaults to .5s)
         // When holding a key/button, rate at which it repeats, in seconds.
         this.KeyRepeatRate = 0.050;
         // Store your own data for retrieval by callbacks.
@@ -216,14 +219,14 @@ export class IO
         // Number of active allocations, updated by MemAlloc/MemFree based
         // on current context. May be off if you have multiple imgui contexts.
         this.MetricsActiveAllocations;
-        // Mouse delta. Note that this is zero if either current or previous
-        // position are invalid (-FLTMAX,-FLTMAX), so a disappearing/reappearing
-        // mouse won't have a huge delta.
-        this.MouseDelta = new Vec2(0, 0);
 
         //------------------------------------------------------------------
         // [Internal] ImGui will maintain those fields. Forward compatibility not guaranteed!
         //------------------------------------------------------------------
+        // Mouse delta. Note that this is zero if either current or previous
+        // position are invalid (-FLTMAX,-FLTMAX), so a disappearing/reappearing
+        // mouse won't have a huge delta.
+        this.MouseDelta = new Vec2(0, 0);
         // Previous mouse position (note that MouseDelta is not necessary ==
         // MousePos-MousePosPrev, in case either position is invalid)
         this.MousePosPrev = new Vec2(0, 0);
@@ -250,6 +253,7 @@ export class IO
         this.MouseDragMaxDistanceSqr = new ArrayEx();
         // Squared maximum distance of how much mouse has traveled from
         // the clicking point
+
         this.KeysDownDuration = new ArrayEx();
         // Duration the keyboard key has been down (0.0f == just pressed)
         this.KeysDownDurationPrev = new ArrayEx();
@@ -330,6 +334,7 @@ export class IO
             canvas.addEventListener("keyup", this.onKeyUp.bind(this));
             canvas.addEventListener("keypress", this.onKeyPress.bind(this));
 
+            /* pointer events combine touch events with mouse events */
             canvas.addEventListener("pointermove", this.onPointerMove.bind(this));
             canvas.addEventListener("pointerdown", this.onPointerDown.bind(this));
             canvas.addEventListener("pointerup", this.onPointerUp.bind(this));
@@ -906,6 +911,89 @@ export class IO
     {
         // no-op to prevent system menu
     }
+
+    updateMouseInputs() // called by imgui on NewFrame
+    {
+        let imgui = this.imgui;
+        let g = this.imgui.guictx;
+        // Round mouse position to avoid spreading non-rounded position
+        // (e.g. UpdateManualResize doesn't support them well)
+        if (imgui.IsMousePosValid(this.MousePos))
+        {
+            this.MousePos = g.LastValidMousePos = Vec2.Floor(this.MousePos);
+        }
+
+        // If mouse just appeared or disappeared (usually denoted by
+        // -FLT_MAX components) we cancel out movement in MouseDelta
+        if (imgui.IsMousePosValid(this.MousePos) &&
+            imgui.IsMousePosValid(this.MousePosPrev))
+        {
+            this.MouseDelta = Vec2.Subtract(this.MousePos, this.MousePosPrev);
+            /* DEBUG
+            if(this.MouseDown[0])
+            {
+                console.log(this.MouseDelta);
+            }
+            */
+        }
+        else
+            this.MouseDelta = Vec2.Zero();
+        if (this.MouseDelta.x != 0 || this.MouseDelta.y != 0)
+            g.NavDisableMouseHover = false;
+
+        this.MousePosPrev = this.MousePos.Clone();
+        for (let i = 0; i < this.MouseDown.length; i++)
+        {
+            this.MouseClicked[i] = this.MouseDown[i] && this.MouseDownDuration[i] < 0.;
+            this.MouseReleased[i] = !this.MouseDown[i] && this.MouseDownDuration[i] >= 0;
+            this.MouseDownDurationPrev[i] = this.MouseDownDuration[i];
+            this.MouseDownDuration[i] = this.MouseDown[i] ?
+                            (this.MouseDownDuration[i] < 0 ? 0 :
+                                this.MouseDownDuration[i] + this.DeltaTime) : -1;
+            this.MouseDoubleClicked[i] = false;
+            if (this.MouseClicked[i])
+            {
+                if ((g.Time - this.MouseClickedTime[i]) < this.MouseDoubleClickTime)
+                {
+                    let deltaClick = imgui.IsMousePosValid(this.MousePos) ?
+                            Vec2.Subtract(this.MousePos, this.MouseClickedPos[i]) :
+                            Vec2.Zero();
+                    if (deltaClick.LengthSq() <
+                        this.MouseDoubleClickMaxDist*this.MouseDoubleClickMaxDist)
+                    {
+                        this.MouseDoubleClicked[i] = true;
+                    }
+                    // so the third click isn't turned into a double-click
+                    this.MouseClickedTime[i] = -Number.MAX_VALUE;
+                }
+                else
+                {
+                    this.MouseClickedTime[i] = g.Time;
+                }
+                this.MouseClickedPos[i] = this.MousePos.Clone();
+                this.MouseDragMaxDistanceAbs[i] = new Vec2(0, 0);
+                this.MouseDragMaxDistanceSqr[i] = 0.;
+            }
+            else
+            if (this.MouseDown[i])
+            {
+                // Maintain the maximum distance we reaching from the initial click position, which is used with dragging threshold
+                let deltaClick = imgui.IsMousePosValid(this.MousePos) ?
+                                Vec2.Subtract(this.MousePos, this.MouseClickedPos[i]) :
+                                Vec2.Zero();
+                let len = deltaClick.LengthSq();
+                this.MouseDragMaxDistanceSqr[i] = Math.max(this.MouseDragMaxDistanceSqr[i],len);
+                this.MouseDragMaxDistanceAbs[i].x = Math.max(this.MouseDragMaxDistanceAbs[i].x,
+                                                            Math.abs(deltaClick.x));
+                this.MouseDragMaxDistanceAbs[i].y = Math.max(this.MouseDragMaxDistanceAbs[i].y,
+                                                            Math.abs(deltaClick.y));
+            }
+            if (this.MouseClicked[i]) // Clicking any mouse button reactivate mouse hovering which may have been deactivated by gamepad/keyboard navigation
+                g.NavDisableMouseHover = false;
+        }
+    }
+
+    // see misc.js for updateMouseWheel
 
 } // end of class IO
 

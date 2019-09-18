@@ -38,7 +38,10 @@ export var ButtonFlags =
     NoHoldingActiveID: 1 << 11,  // don't set ActiveId while holding the mouse (ButtonFlags.PressedOnClick only)
     PressedOnDragDropHold: 1 << 12,  // press when held into while we are drag and dropping another item (used by e.g. tree nodes, collapsing headers)
     NoNavFocus: 1 << 13,   // don't override navigation focus when activated,
-    Circle: 1 << 14
+    Circle: 1 << 14,
+    LongPress: 1 << 15, // only register release-click if held for 
+                        //  greater than  IO.LongPressInterval, meaningful
+                        // only if PressedOnClickRelease
 };
 
 export var Icons =
@@ -144,9 +147,17 @@ export var ImguiButtonMixin =
                         this.setActiveID(id, win); // Hold on ID
                     this.FocusWindow(win);
                 }
+                // NB: PressedOnRelease registers a click even if the
+                //  mouse-wasn't initially pressed here.
                 if ((flags & ButtonFlags.PressedOnRelease) && g.IO.MouseReleased[0])
                 {
                     // Repeat mode trumps <on release>
+                    if(flags & ButtonFlags.LongPress)
+                    {
+                        pressed = g.IO.MouseDownDuration[0] >= g.IO.LongPressInterval;
+                        // 
+                    }
+                    else
                     if (!((flags & ButtonFlags.Repeat) &&
                         g.IO.MouseDownDurationPrev[0] >= g.IO.KeyRepeatDelay))
                     {
@@ -222,7 +233,18 @@ export var ImguiButtonMixin =
                             g.IO.MouseDownDurationPrev[0] >= g.IO.KeyRepeatDelay))
                         {
                             if (!g.DragDropActive)
-                                pressed = true;
+                            {
+                                if(flags & ButtonFlags.LongPress)
+                                {
+                                    if(g.IO.MouseDownDurationPrev[0] >= 
+                                        g.IO.LongPressInterval)
+                                    {
+                                        pressed = true;
+                                    }
+                                }
+                                else
+                                    pressed = true;
+                            }
                         }
                     }
                     this.clearActiveID();
@@ -277,7 +299,7 @@ export var ImguiButtonMixin =
         return pressed;
     },
 
-    ButtonEx(label, size_arg=Vec2.Zero(), flags=0)
+    ButtonEx(label, size_arg=null, flags=0)
     {
         let win = this.getCurrentWindow();
         if (win.SkipItems) return false;
@@ -294,7 +316,7 @@ export var ImguiButtonMixin =
         {
             pos.y += win.DC.CurrentLineTextBaseOffset - style.FramePadding.y;
         }
-        let size = this.calcItemSize(size_arg,
+        let size = this.calcItemSize(size_arg ? size_arg : Vec2.Zero(),
                                     label_size.x + style.FramePadding.x * 2,
                                     label_size.y + style.FramePadding.y * 2);
 
@@ -330,12 +352,12 @@ export var ImguiButtonMixin =
     },
 
     // icons may be available in current font https://graphemica.com/
-    Button(label, size_arg=Vec2.Zero(), flags=0)
+    Button(label, size_arg=null, flags=0)
     {
         return this.ButtonEx(label, size_arg, flags);
     },
 
-    PopupButton(label, size_arg=Vec2.Zero(), flags=0)
+    PopupButton(label, size_arg=null, flags=0)
     {
         let fields = label.split("##");
         label = fields[0] + " " + Icons.RightArrow;
@@ -809,7 +831,7 @@ export var ImguiButtonMixin =
     },
 
     ImageButton(url, size, uv0=null, uv1=null, frame_padding=0,
-                bg_col=null, tint_col=null, onError=null)
+                bg_col=null, tint_col=null, flags=0, onError=null)
     {
         let win = this.getCurrentWindow();
         if (win.SkipItems)
@@ -838,7 +860,7 @@ export var ImguiButtonMixin =
             return false;
 
         let hovered = new ValRef(), held = new ValRef();
-        let pressed = this.ButtonBehavior(bb, id, hovered, held);
+        let pressed = this.ButtonBehavior(bb, id, hovered, held, flags);
 
         // Render
         let img = this.getImage(url, onError);

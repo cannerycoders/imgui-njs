@@ -190,6 +190,18 @@ export var ImguiTextMixin =
         this.PopStyleColor();
     },
 
+    TextEmphasized(fmt, ...args)
+    {
+        this.TextEmphasizedV(fmt, args);
+    },
+
+    TextEmphasizedV(fmt, args)
+    {
+        this.PushStyleColor("Text", this.guictx.Style.Colors.TextEmphasized);
+        this.TextV(fmt, args);
+        this.PopStyleColor();
+    },
+
     TextWrapped(fmt, ...args)
     {
         this.TextWrappedV(fmt, args);

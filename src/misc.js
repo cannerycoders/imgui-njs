@@ -405,86 +405,13 @@ export var ImguiMiscMixin =
     //-------
     updateMouseInputs()
     {
-        let g = this.guictx;
-        // Round mouse position to avoid spreading non-rounded position
-        // (e.g. UpdateManualResize doesn't support them well)
-        if (this.IsMousePosValid(g.IO.MousePos))
-        {
-            g.IO.MousePos = g.LastValidMousePos = Vec2.Floor(g.IO.MousePos);
-        }
-
-        // If mouse just appeared or disappeared (usually denoted by
-        // -FLT_MAX components) we cancel out movement in MouseDelta
-        if (this.IsMousePosValid(g.IO.MousePos) &&
-            this.IsMousePosValid(g.IO.MousePosPrev))
-        {
-            g.IO.MouseDelta = Vec2.Subtract(g.IO.MousePos, g.IO.MousePosPrev);
-            /* DEBUG
-            if(g.IO.MouseDown[0])
-            {
-                console.log(g.IO.MouseDelta);
-            }
-            */
-        }
-        else
-            g.IO.MouseDelta = Vec2.Zero();
-        if (g.IO.MouseDelta.x != 0 || g.IO.MouseDelta.y != 0)
-            g.NavDisableMouseHover = false;
-
-        g.IO.MousePosPrev = g.IO.MousePos.Clone();
-        for (let i = 0; i < g.IO.MouseDown.length; i++)
-        {
-            g.IO.MouseClicked[i] = g.IO.MouseDown[i] && g.IO.MouseDownDuration[i] < 0.;
-            g.IO.MouseReleased[i] = !g.IO.MouseDown[i] && g.IO.MouseDownDuration[i] >= 0;
-            g.IO.MouseDownDurationPrev[i] = g.IO.MouseDownDuration[i];
-            g.IO.MouseDownDuration[i] = g.IO.MouseDown[i] ?
-                            (g.IO.MouseDownDuration[i] < 0 ? 0 :
-                                g.IO.MouseDownDuration[i] + g.IO.DeltaTime) : -1;
-            g.IO.MouseDoubleClicked[i] = false;
-            if (g.IO.MouseClicked[i])
-            {
-                if ((g.Time - g.IO.MouseClickedTime[i]) < g.IO.MouseDoubleClickTime)
-                {
-                    let deltaClick = this.IsMousePosValid(g.IO.MousePos) ?
-                            Vec2.Subtract(g.IO.MousePos, g.IO.MouseClickedPos[i]) :
-                            Vec2.Zero();
-                    if (deltaClick.LengthSq() <
-                        g.IO.MouseDoubleClickMaxDist*g.IO.MouseDoubleClickMaxDist)
-                    {
-                        g.IO.MouseDoubleClicked[i] = true;
-                    }
-                    // so the third click isn't turned into a double-click
-                    g.IO.MouseClickedTime[i] = -Number.MAX_VALUE;
-                }
-                else
-                {
-                    g.IO.MouseClickedTime[i] = g.Time;
-                }
-                g.IO.MouseClickedPos[i] = g.IO.MousePos.Clone();
-                g.IO.MouseDragMaxDistanceAbs[i] = new Vec2(0, 0);
-                g.IO.MouseDragMaxDistanceSqr[i] = 0.;
-            }
-            else
-            if (g.IO.MouseDown[i])
-            {
-                // Maintain the maximum distance we reaching from the initial click position, which is used with dragging threshold
-                let deltaClick = this.IsMousePosValid(g.IO.MousePos) ?
-                                Vec2.Subtract(g.IO.MousePos, g.IO.MouseClickedPos[i]) :
-                                Vec2.Zero();
-                let len = deltaClick.LengthSq();
-                g.IO.MouseDragMaxDistanceSqr[i] = Math.max(g.IO.MouseDragMaxDistanceSqr[i],len);
-                g.IO.MouseDragMaxDistanceAbs[i].x = Math.max(g.IO.MouseDragMaxDistanceAbs[i].x,
-                                                            Math.abs(deltaClick.x));
-                g.IO.MouseDragMaxDistanceAbs[i].y = Math.max(g.IO.MouseDragMaxDistanceAbs[i].y,
-                                                            Math.abs(deltaClick.y));
-            }
-            if (g.IO.MouseClicked[i]) // Clicking any mouse button reactivate mouse hovering which may have been deactivated by gamepad/keyboard navigation
-                g.NavDisableMouseHover = false;
-        }
+         this.guictx.IO.updateMouseInputs();
     },
 
     updateMouseWheel()
     {
+        // we currently allow this to reside here since it modifies
+        // global (non-IO) state related to scrolling, etc.
         let g = this.guictx;
         if (!g.HoveredWindow || g.HoveredWindow.Collapsed)
             return;

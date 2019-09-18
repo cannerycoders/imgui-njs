@@ -15,7 +15,9 @@ export var DragFlags =
 {
     None: 0,
     Vertical: 1,
-    AsHyperText: 2
+    AsHyperText: 2,
+    LongPress: 4, // only register drag after IO.LongPressInterval
+                  //  we used the same id as ButtonFlags 
 };
 
 const FFmt = "%.3f";
@@ -298,7 +300,7 @@ export var ImguiDragMixin =
 
         // Actual drag behavior
         const value_changed = this.dragBehavior(id, data_type, v, v_speed, v_min,
-                                        v_max, format, power, DragFlags.None,
+                                        v_max, format, power, flags,
                                         function(newval)
                                         {
                                             v = newval;
@@ -433,11 +435,15 @@ export var ImguiDragMixin =
         if (g.ActiveIdSource == InputSource.Mouse && this.IsMousePosValid()
             && g.IO.MouseDragMaxDistanceSqr[0] > 1.)
         {
-            adjust_delta = g.IO.MouseDelta[axisS];
-            if (g.IO.KeyAlt)
-                adjust_delta *= 1. / 100;
-            if (g.IO.KeyShift)
-                adjust_delta *= 10;
+            if(!(flags & DragFlags.LongPress) ||
+                 g.IO.MouseDownDuration[0] >= g.IO.LongPressInterval)
+            {
+                adjust_delta = g.IO.MouseDelta[axisS];
+                if (g.IO.KeyAlt)
+                    adjust_delta *= 1. / 100;
+                if (g.IO.KeyShift)
+                    adjust_delta *= 10;
+            }
         }
         else
         if (g.ActiveIdSource == InputSource.Nav)
