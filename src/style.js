@@ -338,8 +338,14 @@ export class Style extends SettingsHandler
             // specific number of segments. Decrease for highly tessellated
             // curves (higher quality, more polygons), increase to reduce quality.
 
-        this.FontSizes = // NB: values changed here may not "take" since 
-                         //  style prefs are saved
+        this.SetColorScheme("DarkColors");
+
+        // Font abstractions
+        /* _DefaultFontSizes and _DefaultFonts are combined with
+         * the users' saved values to allow for addition of
+         * new ids 'after the fact'.
+         */
+        this._DefaultFontSizes =
         {
             "Small": 9,
             "Std": 10,
@@ -348,10 +354,7 @@ export class Style extends SettingsHandler
             "Huge": 32,
         };
 
-        this.SetColorScheme("DarkColors");
-
-        // Font abstractions
-        this.Fonts = // NB: changing this table may not "take" in stored prefs (XXX)
+        this._DefaultFonts = 
         {
             "Default": ["Exo", "Std", "normal"],
             "Label": ["Exo", "Std", "bold"],
@@ -368,27 +371,36 @@ export class Style extends SettingsHandler
             "HugeIcons": ["Material Icons", "Huge", "normal"],
         };
 
+        this.FontSizes = Object.assign({}, this._DefaultFontSizes);
+        this.Fonts = Object.assign({}, this._DefaultFonts);
+
+
         // currently tied to MaterialIcons
         //  https://material.io/resources/icons/?style=baseline
         //  https://github.com/google/material-design-icons/blob/master/iconfont/codepoints
-        this.MIcons =
+        //  same but more up to date:
+        //  https://github.com/jossef/material-design-icons-iconfont/tree/master/dist/fonts
+        //  https://github.com/jossef/material-design-icons-iconfont/blob/master/dist/fonts/MaterialIcons-Regular.json
+        this._MIcons =
         {
             Info: String.fromCharCode(0x0e88e),
             InfoOutline: String.fromCharCode(0x0e88f),
             NoMute: String.fromCharCode(0x0e050),
             Note: String.fromCharCode(0x0e3a1), // audiotrack
-            Menu: String.fromCharCode(0x0e5d2), // ie hamburge
+            Menu: String.fromCharCode(0x0e5d2), // ie hamburger
+            MenuOpen: String.fromCharCode(0x0e9bd),
             Mute: String.fromCharCode(0x0e04f),
             Pause: String.fromCharCode(0x0e034),
             PickFile: String.fromCharCode(0x0e2c8),
             Play: String.fromCharCode(0x0e037),
             Stop: String.fromCharCode(0x0e047),
+            Trash: String.fromCharCode(0x0e872),
             Warning: String.fromCharCode(0x0e002),
         };
 
         // unicode character codes (font-independent-ish)
         // https://graphemica.com/
-        this.UIcons =
+        this._UIcons =
         {
             NavIcon: String.fromCodePoint(0x2630), //  hamburger
             InfoIcon: String.fromCodePoint(0x2139), // 0x1f6c8 circled information source
@@ -406,7 +418,7 @@ export class Style extends SettingsHandler
         let o = {};
         for(let k of Object.getOwnPropertyNames(this))
         {
-            if(k[0] == "_") continue; // font atlas
+            if(k[0] == "_") continue; // font atlas, icons, _defaults
             if(k == "Colors")
             {
                 o.Colors = {};
@@ -422,9 +434,12 @@ export class Style extends SettingsHandler
 
     Instantiate(imgui, o)
     {
+        let deprecatedProps = ["MIcons", "UIcons"];
         let knownProps = Object.getOwnPropertyNames(this); // a list
         for(let k in o)
         {
+            if(deprecatedProps.indexOf(k) != -1)
+                continue;
             if(knownProps.indexOf(k) == -1)
                 console.debug("Style unknown field: " + k);
             else
@@ -433,6 +448,16 @@ export class Style extends SettingsHandler
                 let colors = o[k];
                 for(let cnm in colors)
                     this.Colors[cnm] = Color.Instantiate(colors[cnm]);
+            }
+            else
+            if(k == "Fonts")
+            {
+                this.Fonts = Object.assign(this._DefaultFonts, o[k]);
+            }
+            else
+            if(k == "FontSizes")
+            {
+                this.FontSizes = Object.assign(this._DefaultFontSizes, o[k]);
             }
             else
             if(typeof(o[k]) == "object" && this[k])
