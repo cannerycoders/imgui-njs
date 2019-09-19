@@ -20,7 +20,6 @@ export class Font
         this.Ascent = this.Metrics.ascent;
         this.Baseline = this.Metrics.baseline;
         this.Descent = this.Metrics.descent;
-        this.Scale = 1;
         this.str = str;
         this.measuring = 0;
         this.ctx = canvctx;

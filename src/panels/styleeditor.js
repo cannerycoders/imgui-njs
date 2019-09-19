@@ -240,21 +240,28 @@ export class StyleEditor
                     imgui.PushID(fontname);
                     let fontDetailsOpen = imgui.TreeNode(fontname);
                     imgui.SameLine();
-                    let font = io.Fonts.GetFont(fontname);
-                    let bigfont = io.Fonts.GetFont(fontname, 56);
+                    
+                    let fsz = style.GetFontSize("Std");
+                    let font = io.Fonts.GetFont(fontname, fsz);
                     if (imgui.SmallButton("Set as default"))
-                    {
                         style.SetFont("Default", font);
-                    }
+
                     if (fontDetailsOpen)
                     {
-                        imgui.PushFont(font);
+                        if(this._fontvscale == undefined)
+                            this._fontvscale = 1;
+                        imgui.SliderFloat("Scale", this._fontvscale, 0.2, 5,
+                            "%.1f", 1, (v) => this._fontvscale = v);
+                        let bigfont = io.Fonts.GetFont(fontname, 56);
+                        let visfont = io.Fonts.GetFont(fontname, fsz*this._fontvscale);
+                        imgui.PushFont(visfont);
                         imgui.Text("The quick brown fox jumps over the lazy dog");
                         imgui.PopFont();
-                        imgui.DragFloat("Font scale", font.Scale, 0.005, 0.3, 2., "%.1f");   // Scale only this font
                         // imgui.InputFloat("Font offset", font.DisplayOffset.y, 1, 1, "%.0f");
-                        imgui.Text(`Ascent: ${font.Ascent}, Descent: ${font.Descent}, ` +
-                                `Baseline: ${font.Baseline}, Height: ${font.Descent-font.Ascent}`);
+                        imgui.Text(`Ascent: ${visfont.Ascent.toFixed(1)}, ` +
+                                 `Descent: ${visfont.Descent.toFixed(1)}, ` +
+                                `Baseline: ${visfont.Baseline.toFixed(1)}, ` +
+                                `Height: ${(visfont.Descent-font.Ascent).toFixed(1)}`);
                         // Display all glyphs of the fonts in separate pages of 256 characters
                         // TODO: determine fallback character.
                         let cell_p1 = new Vec2();
@@ -263,7 +270,7 @@ export class StyleEditor
                         let rcol = imgui.GetStyleColor("TextDisabled");
                         let codes = font.GetKnownCodes();
                         const glyphsPerBlock = 256;
-                        const cell_size = font.Size; // tight packing, no LineHeightPct
+                        const cell_size = visfont.Size; // tight packing, no LineHeightPct
                         const cell_spacing = style.ItemSpacing.y;
                         const dl = imgui.GetWindowDrawList();
                         for (let g=0; g<codes.length; g+=glyphsPerBlock)
@@ -283,12 +290,12 @@ export class StyleEditor
                                     if(code != undefined)
                                     {
                                         let char = String.fromCharCode(code);
-                                        dl.AddText(char, cell_p1, font, font.Size, txtcol);
+                                        dl.AddText(char, cell_p1, visfont, font.Size, txtcol);
                                         if (imgui.IsMouseHoveringRect(cell_p1, cell_p2))
                                         {
                                             imgui.BeginTooltip();
                                             imgui.Text("code: " + code.toString(16));
-                                            let nm = font.GetCodeName(code);
+                                            let nm = visfont.GetCodeName(code);
                                             if(nm) imgui.Text("name: " + nm);
                                             imgui.Separator();
                                             imgui.PushFont(bigfont);
