@@ -403,11 +403,6 @@ export var ImguiMiscMixin =
     {console.assert(0);},
 
     //-------
-    updateMouseInputs()
-    {
-         this.guictx.IO.updateMouseInputs();
-    },
-
     updateMouseWheel()
     {
         // we currently allow this to reside here since it modifies

@@ -525,6 +525,8 @@ export class IO
                 document.body.style.cursor = nc;
             }
         }
+
+        this.updateMouseInputs();
     }
 
     EndFrame()

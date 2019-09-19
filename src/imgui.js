@@ -67,7 +67,7 @@ export class Imgui extends ImguiMixins
 
         // g.NewFrame must happen before we reset volatile state
         //  (like MouseCursor)
-        g.NewFrame(time);
+        g.NewFrame(time); // aka g.IO.Newframe
 
         // Check user data
         // (We pass an error message in the assert expression to make it
@@ -196,9 +196,6 @@ export class Imgui extends ImguiMixins
 
         // Update gamepad/keyboard directional navigation
         this.navUpdate();
-
-        // Update mouse input state
-        this.updateMouseInputs();
 
         // Calculate frame-rate for the user, as a purely luxurious feature
         g.FramerateSecPerFrameAccum += g.IO.DeltaTime -
@@ -1042,7 +1039,7 @@ export class Imgui extends ImguiMixins
 
     // is the last item hovered? (and usable, aka not blocked by a popup, etc.).
     // See ImGuiHoveredFlags for more options.
-    IsItemHovered(flags=0)
+    IsItemHovered(flags=0, delay=0)
     {
         let g = this.guictx;
         let win = g.CurrentWindow;
@@ -1091,6 +1088,9 @@ export class Imgui extends ImguiMixins
         // the title bar or tab. When the window is collapsed (SkipItems==true)
         // that last item will never be overwritten so we need to detect the ca
         if (win.DC.LastItemId == win.MoveId && win.WriteAccessed)
+            return false;
+        else
+        if(delay != 0 && g.HoveredIdTimer < delay)
             return false;
         else
             return true;
