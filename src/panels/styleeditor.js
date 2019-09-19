@@ -47,6 +47,7 @@ export class StyleEditor
     {
         let imgui = this.imgui;
         let style = imgui.GetStyle();
+        let dirty = false;
 
         imgui.PushItemWidth(imgui.GetWindowWidth() * 0.5);
 
@@ -62,18 +63,28 @@ export class StyleEditor
             "%.0f", 1, (v) => style.FrameRounding = v))
         {
             style.GrabRounding = style.FrameRounding; // Make GrabRounding always the same value as FrameRounding
+            dirty = true;
         }
         let window_border = (style.WindowBorderSize > 0);
         if (imgui.Checkbox("WindowBorder", window_border))
+        {
             style.WindowBorderSize = window_border ? 0 : 1; // toggle
+            dirty = true;
+        }
         imgui.SameLine();
         let frame_border = (style.FrameBorderSize > 0);
         if (imgui.Checkbox("FrameBorder", frame_border))
+        {
             style.FrameBorderSize = frame_border ? 0 : 1; // toggle
+            dirty = true;
+        }
         imgui.SameLine();
         let popup_border = style.PopupBorderSize > 0;
         if (imgui.Checkbox("PopupBorder", popup_border))
+        {
             style.PopupBorderSize = popup_border ? 0 : 1; // toggle
+            dirty = true;
+        }
 
         // Save/Revert button
         if (imgui.Button("Save Ref"))
@@ -83,7 +94,10 @@ export class StyleEditor
         }
         imgui.SameLine();
         if (imgui.Button("Revert Ref"))
+        {
             this.guictx.Style = this.refStyle.Clone();
+            dirty = true;
+        }
 
         imgui.Separator(); // -------------------------------------
         if (imgui.BeginTabBar("##tabs", TabBarFlags.None))
@@ -94,8 +108,11 @@ export class StyleEditor
 
                 for(let fs in style.FontSizes)
                 {
-                    imgui.SliderInt(fs, style.FontSizes[fs], 8, 32, null,
-                            (newval) => style.FontSizes[fs] = newval);
+                    imgui.SliderInt(fs, style.FontSizes[fs], 8, 32, null, (newval) => 
+                    {
+                        style.FontSizes[fs] = newval;
+                        dirty = true;
+                    });
                 }
 
                 imgui.Text("Main");

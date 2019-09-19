@@ -245,9 +245,10 @@ export class StyleMod
 
 export class Style extends SettingsHandler
 {
-    constructor(fontAtlas)
+    constructor(fontAtlas, imgui)
     {
         super();
+        this._imgui = imgui;
         this.Alpha = 1.0;
             // Global alpha applies to everything in ImGui
         this.WindowPadding = new Vec2(8,8);
@@ -508,6 +509,7 @@ export class Style extends SettingsHandler
     SetFont(field, font)
     {
         this.Fonts[field] = [font.Family, font.Size, font.Weight];
+        this._imgui.MarkIniSettingsDirty();
     }
 
     GetFontSize(nm) // GetFontSize("Default")
@@ -518,6 +520,7 @@ export class Style extends SettingsHandler
     SetFontSize(nm, sz) // SetFontSize("Default", 12)
     {
         this.FontSizes[nm] = sz;
+        this._imgui.MarkIniSettingsDirty();
     }
 
     GetColor(field)
@@ -536,6 +539,11 @@ export class Style extends SettingsHandler
             c.a = this.Alpha;
             return c;
         }
+    }
+
+    MarkDirty()
+    {
+        this._imgui.MarkIniSettingsDirty();
     }
 
     ScaleAllSizes(factor)

@@ -24,7 +24,7 @@ export class GuiContext
         this.FrameScopeActive = false; // Set by NewFrame(), cleared by EndFrame()
         this.FrameScopePushedImplicitWindow = false;
         this.IO = new IO(imgui, canvas, appname);
-        this.Style = new Style(this.IO.Fonts);
+        this.Style = new Style(this.IO.Fonts, imgui);
         this.Font = null;
         this.FontSize = 0;
         this.FontLineHeight = 0; // Just Size*Pct
