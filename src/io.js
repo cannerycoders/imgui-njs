@@ -444,8 +444,22 @@ export class IO
         this.DisplaySize.x = this.canvas.scrollWidth;
         this.DisplaySize.y = this.canvas.scrollHeight;
         let cbound = this.canvas.getBoundingClientRect();
-        this.DisplayOffset.x = cbound.x;
-        this.DisplayOffset.y = cbound.y;
+        if(cbound && cbound.x != undefined)
+        {
+            // preferred since it's viewport relative, but seems to
+            // fail on older android browsers
+            this.DisplayOffset.x = cbound.x;
+            this.DisplayOffset.y = cbound.y;
+        }
+        else
+        {
+            if(this.DisplayOffset.y != this.canvas.offsetTop)
+            {
+                console.debug("bad bounding client rect " + JSON.stringify(cbound));
+                this.DisplayOffset.x = this.canvas.offsetLeft;
+                this.DisplayOffset.y = this.canvas.offsetTop;
+            }
+        }
 
         const dt = time - this.PrevTime;
         this.PrevTime = time;

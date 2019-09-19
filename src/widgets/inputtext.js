@@ -113,65 +113,103 @@ export class InputTextState // NB: contains TextEditState
         this.EditState.Init(singleLine, fontScale);
     }
 
-    Update(imgui, id, frame, vis)
+    Update(imgui, id, frame, vis, multiline)
     {
         if(DOMTextEditing)
         {
             // InputTextState instances are shared accross multiple
-            // inputtext fields.  Update messages are delivered
+            // inputtext fields. Update messages are delivered
             // to create as well as to hide our inputtext entry.
-            // We have only a single DOM entry, but only act on
+            // We have only a two DOM entriews, but only act on
             // the hide request if the hiding id is currently visible.
-            let idstr = "imgui_inputtext_" + id;
+            if(!this.domElements) this.domElements = {};
+            let eltype;
+            if(multiline)
+                eltype = "_multi";
+            else
+                eltype = "_single";
+            let idstr = `imgui_inputtext${eltype}`;
+            let domEl = this.domElements[eltype];
             if(vis)
             {
                 let io = imgui.GetIO();
-                if(!this.domElement)
+                if(!domEl)
                 {
                     let style = imgui.GetStyle();
                     let bgcolor = style.GetColor("FrameBg").AsHashStr(true);
                     let txtcolor = style.GetColor("Text").AsStr();
                     let bordercolor = style.GetColor("Border").AsStr();
                     let rad = style.FrameRounding;
-                    this.domElement = document.createElement("input");
-                    this.domElement.setAttribute("type", "text");
-                    this.domElement.style.position = "absolute";
-                    this.domElement.style.display = "inline";
-                    this.domElement.style.backgroundColor = bgcolor;
-                    this.domElement.style.color = txtcolor;
-                    this.domElement.style.borderRadius = `${rad}px ${rad}px`;
-                    this.domElement.style.borderWidth = ".5px";
-                    this.domElement.style.borderColor = bordercolor;
+                    // make element child of canvas so absolute positioning is
+                    // relative to its location.
+                    if(multiline)
+                        domEl = document.createElement("textarea");
+                    else
+                    {
+                        domEl = document.createElement("input");
+                        domEl.setAttribute("type", "text");
+                    }
+                    this.domElements[eltype] = domEl;
+                    domEl.style.position = "absolute";
+                    domEl.style.display = "inline";
+                    domEl.style.backgroundColor = bgcolor;
+                    domEl.style.color = txtcolor;
+                    domEl.style.borderRadius = `${rad}px ${rad}px`;
+                    domEl.style.borderWidth = ".5px";
+                    domEl.style.borderColor = bordercolor;
                     // keypress doesn't work on android browser
                     // keyup only returns a keycode of 229 (buffer busy) 
                     // unless enter is pressed (13) because auto-correct, etc
-                    this.domElement.onkeyup = (evt) => 
+                    domEl.onkeyup = (evt) => 
                     {
-                        if(evt.keyCode == 13) // Enter
+                        if(evt.keyCode == 13 && !multiline) // Enter
                         {
                             // Transfer text from domElement to our internal state.
                             // dismiss overlay.
-                            // console.log("yippee:" + this.domElement.value);
-                            this.Text.Set(this.domElement.value);
-                            this.domElement.blur();
-                            this.domElement.style.display = "none";
+                            // console.debug("yippee:" + domEl.value);
+                            this.Text.Set(domEl.value);
+                            domEl.blur();
+                            domEl.style.display = "none";
                             imgui.FocusWindow(null);
                         }
+                        else
+                        {
+                            // console.debug("hm:" + evt.keyCode);
+                            if(multiline)
+                                this.Text.Set(domEl.value);
+                        }
                     };
-                    document.body.appendChild(this.domElement);
+                    document.body.appendChild(domEl);
                 }
-                this.domElement.setAttribute("id", idstr);
-                this.domElement.style.left = io.DisplayOffset.x + frame.Min.x + "px";
-                this.domElement.style.top = io.DisplayOffset.y + frame.Min.y + "px";
-                this.domElement.style.width = (frame.Max.x - frame.Min.x) + "px";
-                this.domElement.style.height = (frame.Max.y - frame.Min.y) + "px";
-                this.domElement.style.display = "inline";
-                this.domElement.value = this.Text.Get();
-                this.domElement.focus();
+                domEl.setAttribute("id", idstr);
+                let el = io.canvas;
+                let top = el.offsetTop;
+                let left = el.offsetLeft;
+                while(el.offsetParent) 
+                {
+                    el = el.offsetParent;
+                    top += el.offsetTop;
+                    left += el.offsetLeft;
+                }
+                domEl.style.left = left + frame.Min.x + "px";
+                domEl.style.top = top + frame.Min.y + "px";
+                domEl.style.width = (frame.Max.x - frame.Min.x) + "px";
+                domEl.style.height = (frame.Max.y - frame.Min.y) + "px";
+                domEl.style.display = "inline";
+                /*
+                let s = domEl.style;
+                console.debug("inputtext style\n" + 
+                                `  left: ${s.left}\n` +
+                                `  top: ${s.top}\n` +
+                                `  width: ${s.width}\n` +
+                                `  heigth: ${s.height}\n`);
+                */
+                domEl.value = this.Text.Get();
+                domEl.focus();
             }
             else
-            if(this.domElement && this.domElement.id == idstr)
-                this.domElement.style.display = "none";
+            if(domEl && domEl.id == idstr)
+                domEl.style.display = "none";
         }
     }
 
@@ -560,6 +598,7 @@ export var ImguiInputMixin =
         let g = this.guictx;
         let io = g.IO;
         const style = g.Style;
+        const ismultiline = flags & InputTextFlags.Multiline;
 
         const RENDER_SELECTION_WHEN_INACTIVE = false;
         const is_multiline = (flags & InputTextFlags.Multiline) != 0;
@@ -691,7 +730,7 @@ export var ImguiInputMixin =
             this.setActiveID(id, win);
             this.setFocusID(id, win);
             this.FocusWindow(win);
-            istate.Update(this, id, frame_bb, true);
+            istate.Update(this, id, frame_bb, true, ismultiline);
             console.assert(NavInput.COUNT < 32);
             g.ActiveIdBlockNavInputFlags = (1 << NavInput.Cancel);
             if (flags & (InputTextFlags.CallbackCompletion | InputTextFlags.AllowTabInput))
@@ -1181,7 +1220,7 @@ export var ImguiInputMixin =
         if (clear_active_id && g.ActiveId == id)
         {
             this.clearActiveID();
-            istate.Update(this, id, frame_bb, false);
+            istate.Update(this, id, frame_bb, false, ismultiline);
         }
 
         // Render frame
