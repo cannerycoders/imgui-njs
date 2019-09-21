@@ -247,6 +247,8 @@ export class Style extends SettingsHandler
 {
     constructor(fontAtlas, imgui)
     {
+        // NB: all member variables that don't begin with _ are part
+        //  of the serialization.
         super();
         this._imgui = imgui;
         this.Alpha = 1.0;
@@ -384,18 +386,54 @@ export class Style extends SettingsHandler
         //  https://github.com/jossef/material-design-icons-iconfont/blob/master/dist/fonts/MaterialIcons-Regular.json
         this._MIcons =
         {
+            AccountBalance: String.fromCharCode(0x0e84f),
+            AddLocation: String.fromCharCode(0x0e567),
+            BorderColor: String.fromCharCode(0x0e22b), // edit-like
+            Build: String.fromCharCode(0x0e869),
+            Camera: String.fromCharCode(0x0ea3f), // shutter
+            ChevronLeft: String.fromCharCode(0x0e5cb), 
+            ChevronRight: String.fromCharCode(0x0e5cc),
+            Close: String.fromCharCode(0x0e5cd),
+            CloudDownload: String.fromCharCode(0x0e2c0),
+            CloudUpload: String.fromCharCode(0x0e2c3),
+            CreateNewFolder: String.fromCharCode(0x0e2cc),
+            DateRange: String.fromCharCode(0x0e916),
+            Delete: String.fromCharCode(0x0e872), // trash
+            DeleteSweep: String.fromCharCode(0x0e16c),
+            Edit: String.fromCharCode(0x0e3c9),
+            Error: String.fromCharCode(0x0e000),
+            ErrorOutline: String.fromCharCode(0x0e001),
+            Eye: String.fromCharCode(0x0e8f4),
+            Folder: String.fromCharCode(0x0e2c7),
+            FolderOpen: String.fromCharCode(0x0e2c8),
+            Help: String.fromCharCode(0x0e887),
+            HelpOutline: String.fromCharCode(0x0e8fd),
             Info: String.fromCharCode(0x0e88e),
             InfoOutline: String.fromCharCode(0x0e88f),
-            NoMute: String.fromCharCode(0x0e050),
-            Note: String.fromCharCode(0x0e3a1), // audiotrack
+            ImportExport: String.fromCharCode(0x0e0c3),
             Menu: String.fromCharCode(0x0e5d2), // ie hamburger
             MenuOpen: String.fromCharCode(0x0e9bd),
             Mute: String.fromCharCode(0x0e04f),
+            Monitization: String.fromCharCode(0x0e263), // $ dollar
+            MyLocation: String.fromCharCode(0x0e050),
+            NoMute: String.fromCharCode(0x0e050),
+            Note: String.fromCharCode(0x0e3a1), // audiotrack, musical_note
+            Notes: String.fromCharCode(0x0e26c), // subject
+            OpenInBrowser: String.fromCharCode(0x0e89d),
+            People: String.fromCharCode(0x0ea21), // people-alt
             Pause: String.fromCharCode(0x0e034),
             PickFile: String.fromCharCode(0x0e2c8),
             Play: String.fromCharCode(0x0e037),
+            Refresh: String.fromCharCode(0x0e5d5),
+            Settings: String.fromCharCode(0x0e8b8),
             Stop: String.fromCharCode(0x0e047),
-            Trash: String.fromCharCode(0x0e872),
+            Sync: String.fromCharCode(0x0e627),
+            Trash: String.fromCharCode(0x0e872), // delete
+            ViewComfy: String.fromCharCode(0x0e42a), // tighter grid
+            ViewGrid: String.fromCharCode(0x0e8f0), // aka Module
+            ViewHeadline: String.fromCharCode(0x0e872),
+            ViewList: String.fromCharCode(0x0e872),
+            ViewModule: String.fromCharCode(0x0e8f0), // aka Grid
             Warning: String.fromCharCode(0x0e002),
         };
 
