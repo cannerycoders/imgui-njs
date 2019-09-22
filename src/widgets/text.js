@@ -15,8 +15,10 @@
 // - BulletText()
 // - BulletTextV()
 //-------------------------------------------------------------------------
-import {Vec2, Rect, MutableString} from "../types.js";
+import {ValRef, Vec2, Rect, MutableString} from "../types.js";
 import {FormatValues} from "../datatype.js";
+import {ItemFlags} from "../flags.js";
+import {ButtonFlags} from "./button.js";
 
 export var TextFlags =
 {
@@ -40,6 +42,7 @@ export var TextFlags =
     NoUndoRedo: 1 << 16,  // Disable undo/redo. Note that input text owns the text data while active, if you want to provide your own undo/redo stack you need e.g. to call ClearActiveID().
     CharsScientific: 1 << 17,  // Allow 0123456789.+-*/eE (Scientific notation input)
     CallbackResize: 1 << 18,  // Callback on buffer capacity changes request (beyond 'buf_size' parameter value), allowing the string to grow. Notify when the string wants to be resized (for string types which hold a cache of their Size). You will be provided a new BufSize in the callback and NEED to honor it. (see misc/cpp/imgui_stdlib.h for an example of using this)
+    AsHyperText: 1 << 19,  
     // [Internal]
     Multiline: 1 << 20   // For internal use by InputTextMultiline()
 };
@@ -147,64 +150,76 @@ export var ImguiTextMixin =
         return this.guictx.FontLineHeight + this.guictx.Style.ItemSpacing.y;
     },
 
-    TextUnformatted(txt)
+    HyperText(txt, flags)
     {
-        this.textEx(txt, TextFlags.NoWidthForLargeClippedText);
+
+        return this.textEx(txt, flags|
+                        TextFlags.NoWidthForLargeClippedText|
+                        TextFlags.AsHyperText
+                        );
+    },
+
+    TextUnformatted(txt, flags=0)
+    {
+        this.textEx(txt, flags|TextFlags.NoWidthForLargeClippedText);
     },
 
     Text(fmt, ...args)
     {
-        this.TextV(fmt, args);
+        return this.TextV(fmt, args);
     },
 
     TextV(fmt, args)
     {
         let win = this.getCurrentWindow();
         if (win.SkipItems)
-            return;
+            return false;
         let str = this.formatText(fmt, args);
-        this.textEx(str, TextFlags.NoWidthForLargeClippedText);
+        return this.textEx(str, TextFlags.NoWidthForLargeClippedText);
     },
 
     TextColored(col, fmt, ...args)
     {
-        this.TextColoredV(col, fmt, args);
+        return this.TextColoredV(col, fmt, args);
     },
 
     TextColoredV(col, fmt, args)
     {
         this.PushStyleColor("Text", col);
-        this.TextV(fmt, args);
+        let ret = this.TextV(fmt, args);
         this.PopStyleColor();
+        return ret;
     },
 
     TextDisabled(fmt, ...args)
     {
-        this.TextDisabledV(fmt, args);
+        return this.TextDisabledV(fmt, args);
     },
 
     TextDisabledV(fmt, args)
     {
         this.PushStyleColor("Text", this.guictx.Style.Colors.TextDisabled);
-        this.TextV(fmt, args);
+        let ret = this.TextV(fmt, args);
         this.PopStyleColor();
+        return ret;
     },
 
     TextEmphasized(fmt, ...args)
     {
-        this.TextEmphasizedV(fmt, args);
+        return this.TextEmphasizedV(fmt, args);
     },
 
     TextEmphasizedV(fmt, args)
     {
         this.PushStyleColor("Text", this.guictx.Style.Colors.TextEmphasized);
-        this.TextV(fmt, args);
+        let ret = this.TextV(fmt, args);
         this.PopStyleColor();
+        return ret;
     },
 
     TextWrapped(fmt, ...args)
     {
-        this.TextWrappedV(fmt, args);
+        return this.TextWrappedV(fmt, args);
     },
 
     TextWrappedV(fmt, args)
@@ -215,22 +230,30 @@ export var ImguiTextMixin =
             // Keep existing wrap position if one is already set
             this.PushTextWrapPos(0.);
         }
-        this.TextV(fmt, args);
+        let ret = this.TextV(fmt, args);
         if (need_backup)
             this.PopTextWrapPos();
+        return ret;
     },
 
     textEx(txt, flags)
     {
        let win = this.getCurrentWindow();
         if (win.SkipItems)
-            return;
+            return false;
 
-        let g = this.guictx;
+        let id;
+        if(flags & TextFlags.AsHyperText)
+        {
+            id = win.GetID(txt);
+            txt = txt.split("##")[0];
+        }
+        let ret = false;
         const text_pos = new Vec2(win.DC.CursorPos.x,
                             win.DC.CursorPos.y + win.DC.CurrentLineTextBaseOffset);
         const wrap_pos_x = win.DC.TextWrapPos;
-        const wrap_enabled = (wrap_pos_x >= 0.);
+        const wrap_enabled = flags&TextFlags.NoWidthForLargeClippedText ? false :
+                                (wrap_pos_x >= 0.);
         if (txt.length > 2000 && !wrap_enabled)
         {
             // Long text!
@@ -255,11 +278,29 @@ export var ImguiTextMixin =
             let bb = new Rect(text_pos, Vec2.Add(text_pos, text_size));
             this.itemSize(text_size);
             if (!this.itemAdd(bb, 0))
-                return;
+                return ret;
+            
+            if(flags&TextFlags.AsHyperText)
+            {
+                let hovered = new ValRef(), held = new ValRef();
+                if (win.DC.ItemFlags & ItemFlags.ButtonRepeat)
+                    flags |= ButtonFlags.Repeat;
+                ret = this.ButtonBehavior(bb, id, hovered, held, flags);
+                if (ret)
+                    this.markItemEdited(id);
 
-            // Render (we don't hide text after ## in this end-user function)
+                let style = this.GetStyle();
+                let col = style.GetColor((held.get() && hovered.get() ?
+                        "LinkActive" : hovered.get() ? "LinkHovered" : "Link"));
+                this.PushStyleColor("Text", col);
+            }
+
+            // Render (only expect ## in the AsHyperText case)
             this.renderTextWrapped(bb.Min, txt, wrap_width);
+            if(flags&TextFlags.AsHyperText)
+                this.PopStyleColor();
         }
+        return ret;
     },
 
     LabelText(label, fmt, ...args)
