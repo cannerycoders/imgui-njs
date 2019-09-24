@@ -8,7 +8,8 @@ import {MouseCursor, NavInput, Key} from "./enums.js";
 import {FontAtlas} from "./font.js";
 import {ArrayEx} from "./arrayex.js";
 
-const DirtyCount = 5;
+const DirtyCount = 5; // iterations to "draw down" to LazyMode
+const MinimumFrameInterval = 1000; // minimum 1 fps
 
 export class IO
 {
@@ -34,6 +35,8 @@ export class IO
         // Path to .log file (default parameter to ImGui::LogToFile when no
         // file is specified).
         this.LogFilename = `${appname}/diagnostics.log`;
+
+        this.LazyDraw = false; // experimental: app can set LazyDraw in "bgd"
 
         // Time for a double-click, in seconds.
         this.MouseDoubleClickTime = .3;
@@ -464,20 +467,20 @@ export class IO
         const dt = time - this.PrevTime;
         this.PrevTime = time;
         this.DeltaTime = dt / 1000;
-        if(false)
+        if(this.LazyDraw)
         {
-            // this experiement currently fails due to the fact that
+            // this experiment currently fails due to the fact that
             // certain imgui behaviors occur over multiple frames.
             // Popups, textinput are among the biggest fails.
             const ddt = time - this.PrevDirtyTime;
-            if(ddt > 300) // minimum 3 frames per sec
+            if(ddt > MinimumFrameInterval) 
             {
                 this.PrevDirtyTime = time;
                 this.Dirty++;
             }
         }
         else
-            this.Dirty = true; // checked by imgui.NewFrame
+            this.Dirty = true; // checked by app.OnLoop/imgui.NewFrame
 
         if (this.WantSetMousePos)
             console.log("TODO: MousePos", this.MousePos.x, this.MousePos.y);
@@ -531,7 +534,8 @@ export class IO
 
     EndFrame()
     {
-        this.Dirty--;
+        if(this.Dirty > 0)
+            this.Dirty--;
     }
 
     Shutdown()
