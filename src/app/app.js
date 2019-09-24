@@ -124,7 +124,7 @@ export default class ImguiApp
             this.ShowContextMenu(this.imgui);
             this.FileBrowser.Show(this.imgui); // manages its own IsOpen state
             this.Log.Show(this.imgui, "Log");
-            this.OnFrame(this.imgui); //
+            this.OnFrame(this.imgui); // subclass hooks in here
             this.imgui.Render(); // calls EndFrame
         }
         else
