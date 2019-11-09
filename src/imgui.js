@@ -1394,6 +1394,11 @@ export class Imgui extends ImguiMixins
 
     }
 
+    IsTouchScreen()
+    {
+        return this.guictx.IO.ConfigFlags & ConfigFlags.IsTouchScreen;
+    }
+
     // is mouse button held (0=left, 1=right, 2=middle)
     IsMouseDown(button)
     {

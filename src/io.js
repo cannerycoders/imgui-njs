@@ -3,7 +3,7 @@
  * Communicate most settings and inputs/outputs to imgui using this structure.
 **/
 import {Vec2} from "./types.js";
-import {BackendFlags} from "./flags.js";
+import {BackendFlags, ConfigFlags} from "./flags.js";
 import {MouseCursor, NavInput, Key} from "./enums.js";
 import {FontAtlas} from "./font.js";
 import {ArrayEx} from "./arrayex.js";
@@ -24,6 +24,12 @@ export class IO
         // Configuration (fill once)
         //------------------------------------------------------------------
         this.ConfigFlags = 0;
+        if((typeof window.orientation !== "undefined") || 
+           (navigator.userAgent.indexOf("IEMobile") !== -1))
+        {
+            this.ConfigFlags |= ConfigFlags.IsTouchScreen;
+        }
+
         this.BackendFlags = 0;
         this.DisplayOffset = new Vec2(0, 0); // position of display relative to parent (usually 0)
         this.DisplaySize = new Vec2(0, 0); // Main display size, in pixels. (Vec2)

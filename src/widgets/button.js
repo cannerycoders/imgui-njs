@@ -50,6 +50,8 @@ export var Icons =
     RightArrow: String.fromCodePoint(0x25B6),
     RightArrow2: String.fromCodePoint(0x25BA),
     DownArrow: String.fromCodePoint(0x25BC),
+    Hamburger: String.fromCodePoint(0x2630),
+    Gear: String.fromCodePoint(0x2699),
 };
 
 export var ImguiButtonMixin =

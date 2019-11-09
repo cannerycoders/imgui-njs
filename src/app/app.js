@@ -1,4 +1,5 @@
 import {ValRef, Vec2, MutableString} from "../types.js";
+import {ConfigFlags} from "../flags.js";
 import FileBrowser from "../panels/filebrowser.js";
 import Log from "../panels/log.js";
 import {Imgui} from "../imgui.js";
@@ -43,10 +44,23 @@ export default class ImguiApp
         window.App = this;
     }
 
+    IsTouchScreen()
+    {
+        if(this.imgui)
+            return this.imgui.guictx.IO.ConfigFlags & ConfigFlags.IsTouchScreen;
+        else
+            return this.IsMobileDevice();
+    }
+
     IsMobileDevice()
     {
-        return (typeof window.orientation !== "undefined") || 
-               (navigator.userAgent.indexOf("IEMobile") !== -1);
+        if((typeof window.orientation !== "undefined") || 
+           (navigator.userAgent.indexOf("IEMobile") !== -1))
+        {
+            return true;
+        }
+        else
+            return false;
         /*
         let a = window.navigator.userAgent.toLowerCase();
         return a.indexOf("android") != -1 ||

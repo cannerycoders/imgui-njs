@@ -362,6 +362,7 @@ export class Style extends SettingsHandler
             "Default": ["Exo", "Std", "normal"],
             "Label": ["Exo", "Std", "bold"],
             "Small": ["Exo", "Small", "normal"],
+            "Std": ["Exo", "Std", "normal"],
             "Big": ["Exo", "Big", "normal"],
             "serif": ["Georgia", "Std", "normal"],
             "sans-serif": ["Exo", "Std", "normal"],
@@ -443,6 +444,13 @@ export class Style extends SettingsHandler
         {
             NavIcon: String.fromCodePoint(0x2630), //  hamburger
             InfoIcon: String.fromCodePoint(0x2139), // 0x1f6c8 circled information source
+            GearIcon: String.fromCodePoint(0x2699),
+            RightArrow: String.fromCodePoint(0x25B6),
+            SmallRightArrow: String.fromCodePoint(0x25B8),
+            RightArrow2: String.fromCodePoint(0x25BA),
+            DownArrow: String.fromCodePoint(0x25BC),
+            SmallDownArrow: String.fromCodePoint(0x25BE),
+            Tricolon: String.fromCodePoint(0x205D), // 3 vertical dots (menu)
         };
 
         // stuff not subject to encapsulation should start with _

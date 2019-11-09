@@ -150,9 +150,17 @@ export var ImguiTextMixin =
         return this.guictx.FontLineHeight + this.guictx.Style.ItemSpacing.y;
     },
 
-    HyperText(txt, flags)
+    HyperMenu(txt, flags=0)
     {
+        let fields = txt.split("##");
+        txt = fields[0] + " " + this.guictx.Style._UIcons.SmallDownArrow;
+        if(fields.length == 2)
+            txt += "##" + fields[1];
+        return this.HyperText(txt, flags);
+    },
 
+    HyperText(txt, flags=0)
+    {
         return this.textEx(txt, flags|
                         TextFlags.NoWidthForLargeClippedText|
                         TextFlags.AsHyperText

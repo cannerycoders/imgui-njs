@@ -74,6 +74,14 @@ export var ImguiLayoutMixin =
         win.DC.CurrentLineTextBaseOffset = win.DC.PrevLineTextBaseOffset;
     },
 
+    PrevLineHeight()
+    {
+        let win = this.getCurrentWindow();
+        if (win.SkipItems)
+            return 0;
+        return win.DC.PrevLineHeight;
+    },
+
     Indent(indent_w = 0)
     {
         let win = this.getCurrentWindow();
@@ -121,7 +129,7 @@ export var ImguiLayoutMixin =
     },
 
     // undo a SameLine() or force a new line when in an horizontal-layout context.
-    NewLine()
+    NewLine(fraction=1)
     {
         let win = this.getCurrentWindow();
         if (win.SkipItems)
@@ -135,7 +143,7 @@ export var ImguiLayoutMixin =
         if (win.DC.CurrentLineHeight > 0)
             this.itemSize(Vec2.Zero());
         else
-            this.itemSize(new Vec2(0, g.FontLineHeight));
+            this.itemSize(new Vec2(0, g.FontLineHeight*fraction));
         win.DC.LayoutType = backup_layout_type;
     },
 

@@ -1,11 +1,14 @@
 import {Rect, Vec1, Vec2, ValRef} from "../types.js";
-import {HoveredFlags, ItemFlags} from "../flags.js";
+import {ConfigFlags, HoveredFlags, ItemFlags} from "../flags.js";
 import {Dir} from "../enums.js";
 import {ButtonFlags} from "./button.js";
 import {ComboFlags} from "./combo.js";
 import {GetHash} from "../hashutil.js";
 import {ItemHoveredDataBackup} from "../misc.js";
 import {Color, Colors} from "../color.js";
+
+// TODO:
+//     fix tab reordering
 
 export var TabBarFlags =
 {
@@ -274,7 +277,7 @@ export var ImguiTabBarMixin =
     },
 
     // create a Tab. Returns true if the Tab is selected.
-    BeginTabItem(label, p_open, flags=0)
+    BeginTabItem(label, p_open=null, flags=0)
     {
         let g = this.guictx;
         if (g.CurrentWindow.SkipItems)
@@ -466,9 +469,10 @@ export var ImguiTabBarMixin =
             this.SetItemAllowOverlap();
 
         // Drag and drop: re-order tabs
-        if (held && !tab_appearing && this.IsMouseDragging(0))
+        if (held && !tab_appearing && this.IsMouseDragging(0) && 
+            (tab_bar.Flags & TabBarFlags.Reorderable))
         {
-            if (!g.DragDropActive && (tab_bar.Flags & TabBarFlags.Reorderable))
+            if (!g.DragDropActive)
             {
                 // While moving a tab it will jump on the other side of the mouse, so we also test for MouseDelta.x
                 if (g.IO.MouseDelta.x < 0 && g.IO.MousePos.x < bb.Min.x)
@@ -487,6 +491,7 @@ export var ImguiTabBarMixin =
 
         if(false)
         {
+            // XXX: pending evaluation/implementation of ForegroundDrawList
             if (hovered && g.HoveredIdNotActiveTimer > 0.50&&
                 bb.GetWidth() < tab.WidthContents)
             {
@@ -510,8 +515,12 @@ export var ImguiTabBarMixin =
         // Select with right mouse button. This is so the common idiom for
         // context menu automatically highlight the current widget.
         const hovered_unblocked = this.IsItemHovered(HoveredFlags.AllowWhenBlockedByPopup);
-        if (hovered_unblocked && (this.IsMouseClicked(1) || this.IsMouseReleased(1)))
+        if (hovered_unblocked && 
+            (this.IsMouseClicked(1) || this.IsMouseReleased(1))
+           )
+        {
             tab_bar.NextSelectedTabId = id;
+        }
 
         if (tab_bar.Flags & TabBarFlags.NoCloseWithMiddleMouseButton)
             flags |= TabItemFlags.NoCloseWithMiddleMouseButton;
@@ -860,15 +869,20 @@ export var ImguiTabBarMixin =
         if(label == undefined)
         {
             console.assert(0);
+            label = "Error";
         }
-        let labelSize = this.CalcTextSize(label, true);
+        let labelSize = this.CalcTextSize(label, true/*hide text after ##*/);
         let size = new Vec2(labelSize.x + g.Style.FramePadding.x,
                             labelSize.y + g.Style.FramePadding.y * 2);
+        size.x += g.Style.FramePadding.x + 1;
         if (hasCloseButton)
-            size.x += g.Style.FramePadding.x + (g.Style.ItemInnerSpacing.x + g.FontSize); // We use Y intentionally to fit the close button circle.
-        else
-            size.x += g.Style.FramePadding.x + 1;
-        return new Vec2(Math.min(size.x, this.tabBarCalcMaxTabWidth()), size.y);
+        {
+            size.x += (g.Style.ItemInnerSpacing.x + g.FontSize); 
+            // We use FontSize (Y) intentionally to fit the close button circle.
+        }
+
+        size.x = Math.min(size.x, this.tabBarCalcMaxTabWidth());
+        return size;
     },
 
     tabItemBackground(drawlist, bb, itemflags, col)
@@ -979,7 +993,11 @@ export var ImguiTabBarMixin =
             const ellipsis_width = (1. + 1.) * ellipsis_dot_count - 1.;
             const maxwidth = text_ellipsis_clip_bb.GetWidth()-ellipsis_width+1;
             let labelClippedX = g.Font.CalcTextSizeA(maxwidth, -1, label).x;
-            console.assert(0, "need to clip label: " + labelClippedX);
+
+            // nb: could add ellipses
+            // console.assert(0, "need to clip label: " + labelClippedX);
+            this.renderTextClippedEx(drawlist, text_pixel_clip_bb.Min,
+                        text_pixel_clip_bb.Max, label, null);
         }
         else
         {
