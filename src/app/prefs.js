@@ -5,9 +5,14 @@ export class Prefs extends SettingsHandler
     constructor(nmspace)
     {
         super();
-
+        this.imgui = null;
         this.nmspace = nmspace;
         this.vals = {};
+    }
+
+    Begin(imgui)
+    {
+        this.imgui = imgui;
     }
 
     GetTypeName() { return "Prefs"; }
@@ -20,22 +25,18 @@ export class Prefs extends SettingsHandler
             delete this.vals[val];
     }
 
-    Encapsulate(imgui)
+    Encapsulate() // @override 
     {
         return this.vals;
     }
 
-    Instantiate(imgui, o)
+    Instantiate(imgui, o) // @override of SettingsHandler
     {
-        if(!this.imgui)
-        {
-            // console.debug("Prefs.Instantiate");
-            this.imgui = imgui;
-        }
+        console.assert(this.imgui == imgui);
         this.vals = o;
     }
 
-    SetValue(nm, value)
+    SetValue(nm, value) // @override
     {
         if(this.vals[nm] != value)
         {
@@ -45,7 +46,7 @@ export class Prefs extends SettingsHandler
         }
     }
 
-    GetValue(nm, fallback)
+    GetValue(nm, fallback) // @override
     {
         let ret = this.vals[nm]; // may be undefined
         if(ret === undefined)

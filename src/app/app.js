@@ -93,8 +93,7 @@ export default class ImguiApp
 
     SetPref(name, value)
     {
-        this.prefs.SetValue(name, value);
-        this.imgui.MarkIniSettingsDirty();
+        this.prefs.SetValue(name, value); // calls imgui.MarkIniSettingsDirty
     }
 
     GetPref(name, dflt)
@@ -106,6 +105,7 @@ export default class ImguiApp
     {
         if(!this.canvas) return;
         this.imgui = new Imgui(this.canvas, this.appname, this);
+        this.prefs.Begin(this.imgui);
         this.imgui.guictx.SettingsHandlers.push(this.prefs);
         this.imgui.LoadIniSettingsFromDisk();
         this.Log = new Log(this);
