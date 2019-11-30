@@ -1599,10 +1599,15 @@ export class Imgui extends ImguiMixins
     {
         this.appServices.clipboard.readText().then((txt) => 
         {
-            cb(txt);
+            if(cb)
+                cb(txt);
+            return txt;
         }).catch((err) => 
         {
+            if(cb)
+                cb(null);
             console.error("failed to read from clipboard: " + err);
+            return null;
         });
     }
 
