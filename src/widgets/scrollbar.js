@@ -5,6 +5,7 @@ import {CornerFlags} from "../flags.js";
 import {WindowFlags} from "../window.js";
 import {ButtonFlags} from "./button.js";
 
+let sLockedScroll = {}; // indexed by window id
 export var ImguiScrollbarMixin =
 {
     // Vertical/Horizontal scrollbar
@@ -129,6 +130,11 @@ export var ImguiScrollbarMixin =
             let seek_absolute = false;
             if (!previously_held)
             {
+                if(win.Flags & WindowFlags.LockScrollingContentSize)
+                {
+                    // console.info("begin locked scroll");
+                    sLockedScroll[id] = win_size_contents_v;
+                }
                 // On initial click calculate the distance between mouse and the
                 // center of the grab
                 if (clicked_v_norm >= grab_v_norm &&
@@ -141,6 +147,13 @@ export var ImguiScrollbarMixin =
                     seek_absolute = true;
                     apply(0.0);
                 }
+            }
+            else
+            if(win.Flags & WindowFlags.LockScrollingContentSize)
+            {
+                scroll_max = Math.max(1, sLockedScroll[id] - win_size_avail_v);
+                scroll_ratio = Vec1.Saturate(scroll_v / scroll_max);
+                grab_v_norm = scroll_ratio * (scrollbar_size_v - grab_h_pixels) / scrollbar_size_v;
             }
             // Apply scroll
             // It is ok to modify Scroll here because we are being called in
@@ -163,6 +176,8 @@ export var ImguiScrollbarMixin =
             if (seek_absolute)
                 apply(clicked_v_norm - grab_v_norm - grab_h_norm*0.5);
         }
+        else
+            sLockedScroll[id] = 0;
 
         // Render grab
         const grab_col = style.GetColor(held.get() ? "ScrollbarGrabActive" :

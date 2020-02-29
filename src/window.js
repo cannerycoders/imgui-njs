@@ -35,6 +35,7 @@ export var WindowFlags =
     NoNavInputs: 1 << 18,  // No gamepad/keyboard navigation within the window
     NoNavFocus: 1 << 19,  // No focusing toward this window with gamepad/keyboard navigation (e.g. skipped by CTRL+TAB)
     UnsavedDocument: 1 << 20,  // Append '*' to title without affecting the ID, as a convenience to avoid using the ### operator. When used in a tab/docking context, tab is selected on closure and closure is deferred by one frame to allow code to cancel the closure (with a confirmation popup, etc.) without flicker.
+    LockScrollingContentSize: 1 << 21, // disallow content-size adjustment while scrolling
 
     // [Internal]
     NavFlattened: 1 << 23,  // [BETA] Allow gamepad/keyboard navigation to cross over parent border to this child (only use on child that have no scrolling!)
