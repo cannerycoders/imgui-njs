@@ -190,6 +190,11 @@ export class LogWindow
             this.IsShowing.set(false);
     }
 
+    FilterEntries(filter)
+    {
+        this.entries = this.entries.filter(filter); 
+    }
+
     Raise()
     {
         this.IsShowing.set(true);
