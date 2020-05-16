@@ -412,6 +412,7 @@ export class Style extends SettingsHandler
             Info: String.fromCharCode(0x0e88e),
             InfoOutline: String.fromCharCode(0x0e88f),
             ImportExport: String.fromCharCode(0x0e0c3),
+            LibraryBooks: String.fromCharCode(0x0e02f),
             Menu: String.fromCharCode(0x0e5d2), // ie hamburger
             MenuOpen: String.fromCharCode(0x0e9bd),
             Mute: String.fromCharCode(0x0e04f),
@@ -424,6 +425,7 @@ export class Style extends SettingsHandler
             People: String.fromCharCode(0x0ea21), // people-alt
             Pause: String.fromCharCode(0x0e034),
             PickFile: String.fromCharCode(0x0e2c8),
+            PickImage: String.fromCharCode(0x0e43e), // add_photograph_alt
             Play: String.fromCharCode(0x0e037),
             Refresh: String.fromCharCode(0x0e5d5),
             Settings: String.fromCharCode(0x0e8b8),

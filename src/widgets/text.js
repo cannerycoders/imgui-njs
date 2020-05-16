@@ -116,16 +116,23 @@ export class TextFilter
     {
         if(this.filter.Length() > 0 && this.regexp)
         {
-            if(!Array.isArray(input))
-                return this.regexp.test(input);
-            else
+            if(input)
             {
-                for(let str of input)
+                if(!Array.isArray(input))
+                    return this.regexp.test(input);
+                else
                 {
-                    if(this.regexp.test(str))
-                        return true;
+                    for(let str of input)
+                    {
+                        if(this.regexp.test(str))
+                            return true;
+                    }
                 }
             }
+            else
+            if(this.filter.Get() == "<undefined>" ||
+               this.filter.Get() == "<unknown>")
+                return true;
             return false;
         }
         else
@@ -296,11 +303,10 @@ export var ImguiTextMixin =
                 ret = this.ButtonBehavior(bb, id, hovered, held, flags);
                 if (ret)
                     this.markItemEdited(id);
-
                 let style = this.GetStyle();
-                let col = style.GetColor((held.get() && hovered.get() ?
-                        "LinkActive" : hovered.get() ? "LinkHovered" : "Link"));
-                this.PushStyleColor("Text", col);
+                let stylenm = held.get()  ? "LinkActive" :
+                                (hovered.get() ? "LinkHovered" : "Link");
+                this.PushStyleColor("Text", style.GetColor(stylenm));
             }
 
             // Render (only expect ## in the AsHyperText case)
