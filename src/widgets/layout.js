@@ -430,6 +430,19 @@ export var ImguiLayoutMixin =
                         win.DC.CursorPos.y - win.Pos.y + win.Scroll.y);
     },
 
+    SetCursorPos(local_pos)
+    {
+        let win = this.getCurrentWindow();
+        win.DC.CursorPos.x = win.Pos.x - win.Scroll.x + local_pos.x;
+        win.DC.CursorPos.y = win.Pos.y - win.Scroll.y + local_pos.y;
+        /*
+        win.DC.CursorPos = Vec2.Subtract(win.Pos,
+                                Vec2.Add(win.Scroll, local_pos));
+        */
+        win.DC.CursorMaxPos = Vec2.Max(win.DC.CursorMaxPos,
+                                       win.DC.CursorPos);
+    },
+
     //   (some functions are using window-relative coordinates, such as:
     //    GetCursorPos, GetCursorStartPos, GetContentRegionMax,
     //    GetWindowContentRegion* etc. other functions such as
@@ -452,15 +465,6 @@ export var ImguiLayoutMixin =
     {
         let win = this.getCurrentWindowRead();
         return win.DC.CursorPos.y - win.Pos.y + win.Scroll.y;
-    },
-
-    SetCursorPos(local_pos)
-    {
-        let win = this.getCurrentWindow();
-        win.DC.CursorPos = Vec2.Subtract(win.Pos,
-                                Vec2.Add(win.Scroll, local_pos));
-        win.DC.CursorMaxPos = Vec2.Max(win.DC.CursorMaxPos,
-                                       win.DC.CursorPos);
     },
 
     SetCursorPosX(local_x)
