@@ -38,6 +38,12 @@ export class Prefs extends SettingsHandler
 
     SetValue(nm, value) // @override
     {
+        if(!nm) 
+        {
+            console.assert(nm);
+            return;
+        }
+
         if(this.vals[nm] != value)
         {
             this.vals[nm] = value;
@@ -48,6 +54,12 @@ export class Prefs extends SettingsHandler
 
     GetValue(nm, fallback) // @override
     {
+        if(!nm) 
+        {
+            console.assert(nm);
+            return fallback;
+        }
+
         let ret = this.vals[nm]; // may be undefined
         if(ret === undefined)
             ret = fallback;

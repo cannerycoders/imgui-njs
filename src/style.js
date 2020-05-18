@@ -292,6 +292,7 @@ export class Style extends SettingsHandler
             // a composed widget (e.g. a slider and its label)
         this.TextLineHeightPct = 1.25;
             // lineheight for text (usually >= 1)
+        this.LabelWidth = "MMMMMM"; // aka 6em
         this.TouchExtraPadding = new Vec2(0,0);
             // Expand reactive bounding box for touch-based system where
             // touch position is not accurate enough. Unfortunately we don't

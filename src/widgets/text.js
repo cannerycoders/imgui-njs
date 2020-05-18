@@ -43,8 +43,9 @@ export var TextFlags =
     CharsScientific: 1 << 17,  // Allow 0123456789.+-*/eE (Scientific notation input)
     CallbackResize: 1 << 18,  // Callback on buffer capacity changes request (beyond 'buf_size' parameter value), allowing the string to grow. Notify when the string wants to be resized (for string types which hold a cache of their Size). You will be provided a new BufSize in the callback and NEED to honor it. (see misc/cpp/imgui_stdlib.h for an example of using this)
     AsHyperText: 1 << 19,  
+    UseLabelWidth: 1 << 20, // defer to Style for width text
     // [Internal]
-    Multiline: 1 << 20   // For internal use by InputTextMultiline()
+    Multiline: 1 << 21   // For internal use by InputTextMultiline()
 };
 
 // A text filter widget includes the filter value and is able to draw itself.
@@ -166,11 +167,12 @@ export var ImguiTextMixin =
         return this.HyperText(txt, flags);
     },
 
-    HyperText(txt, flags=0)
+    HyperText(txt, txtflags=0, buttonflags=0)
     {
-        return this.textEx(txt, flags|
+        return this.textEx(txt, txtflags|
                         TextFlags.NoWidthForLargeClippedText|
-                        TextFlags.AsHyperText
+                        TextFlags.AsHyperText,
+                        buttonflags
                         );
     },
 
@@ -251,70 +253,40 @@ export var ImguiTextMixin =
         return ret;
     },
 
-    textEx(txt, flags)
+    // Add a text label that has vertical alignment equivalent to
+    // input text.  Used to bypass labels on right behavior.
+    Label(label, txtflags=TextFlags.UseLabelWidth)
     {
-       let win = this.getCurrentWindow();
+        let win = this.getCurrentWindow();
         if (win.SkipItems)
-            return false;
+            return;
 
-        let id;
-        if(flags & TextFlags.AsHyperText)
-        {
-            id = win.GetID(txt);
-            txt = txt.split("##")[0];
-        }
-        let ret = false;
-        const text_pos = new Vec2(win.DC.CursorPos.x,
-                            win.DC.CursorPos.y + win.DC.CurrentLineTextBaseOffset);
-        const wrap_pos_x = win.DC.TextWrapPos;
-        const wrap_enabled = flags&TextFlags.NoWidthForLargeClippedText ? false :
-                                (wrap_pos_x >= 0.);
-        if (txt.length > 2000 && !wrap_enabled)
-        {
-            // Long text!
-            // Perform manual coarse clipping to optimize for long multi-line text
-            // - From this point we will only compute the width of lines that are
-            //   visible. Optimization only available when word-wrapping is disabled.
-            // - We also don't vertically center the text within the line full
-            //   height, which is unlikely to matter because we are likely the
-            //   biggest and only item on the line.
-            // - We use memchr(), pay attention that well optimized versions of
-            //   those str/mem functions are much faster than a casually written
-            //   loop.
-            console.assert(0, "long text not implemented");
-        }
-        else
-        {
-            const wrap_width = wrap_enabled ?
-                    this.calcWrapWidthForPos(win.DC.CursorPos, wrap_pos_x) :
-                    0.0;
-            const text_size = this.CalcTextSize(txt, false, wrap_width);
-
-            let bb = new Rect(text_pos, Vec2.Add(text_pos, text_size));
-            this.itemSize(text_size);
-            if (!this.itemAdd(bb, 0))
-                return ret;
-            
-            if(flags&TextFlags.AsHyperText)
-            {
-                let hovered = new ValRef(), held = new ValRef();
-                if (win.DC.ItemFlags & ItemFlags.ButtonRepeat)
-                    flags |= ButtonFlags.Repeat;
-                ret = this.ButtonBehavior(bb, id, hovered, held, flags);
-                if (ret)
-                    this.markItemEdited(id);
-                let style = this.GetStyle();
-                let stylenm = held.get()  ? "LinkActive" :
-                                (hovered.get() ? "LinkHovered" : "Link");
-                this.PushStyleColor("Text", style.GetColor(stylenm));
-            }
-
-            // Render (only expect ## in the AsHyperText case)
-            this.renderTextWrapped(bb.Min, txt, wrap_width);
-            if(flags&TextFlags.AsHyperText)
-                this.PopStyleColor();
-        }
-        return ret;
+        let g = this.guictx;
+        let style = g.Style;
+        let mtext = label;
+        if(txtflags & TextFlags.UseLabelWidth)
+            mtext = style.LabelWidth;
+        const labelSize = this.CalcTextSize(mtext, true);
+        const labelBB = new Rect(win.DC.CursorPos,
+                                  Vec2.AddXY(win.DC.CursorPos,
+                                    labelSize.x + style.FramePadding.x, 
+                                    labelSize.y + style.FramePadding.y*2));
+        /*
+        // styleItemInnerSpacing
+        const totalBB = new Rect(win.DC.CursorPos,
+                                 Vec2.Add(
+                                    Vec2.AddXY(win.DC.CursorPos,
+                                        w + (labelSize.x > 0 ?
+                                                style.ItemInnerSpacing.x : 0),
+                                        style.FramePadding.y*2),
+                                    labelSize));
+        */
+        this.itemSize(labelBB, style.FramePadding.y);
+        if (!this.itemAdd(labelBB, 0))
+            return;
+        let tpos = new Vec2(labelBB.Min.x,
+                            labelBB.Min.y + style.FramePadding.y);
+        this.renderText(tpos, label); // clip?
     },
 
     LabelText(label, fmt, ...args)
@@ -347,10 +319,13 @@ export var ImguiTextMixin =
         if (!this.itemAdd(total_bb, 0))
             return;
 
-        // Render
-        let valueTxt = this.formatText(fmt, args);
-        this.renderTextClipped(value_bb.Min, value_bb.Max,
+        if(fmt)
+        {
+            // Render
+            let valueTxt = this.formatText(fmt, args);
+            this.renderTextClipped(value_bb.Min, value_bb.Max,
                                 valueTxt, null, new Vec2(0.,0.5));
+        }
         if (label_size.x > 0)
         {
             this.renderText(
@@ -399,6 +374,77 @@ export var ImguiTextMixin =
                                 g.FontSize + style.FramePadding.x*2,
                                 text_base_offset_y),
                         text, false);
+    },
+
+    textEx(txt, flags, buttonflags=0)
+    {
+       let win = this.getCurrentWindow();
+        if (win.SkipItems)
+            return false;
+
+        let id;
+        if(flags & TextFlags.AsHyperText)
+        {
+            id = win.GetID(txt);
+            txt = txt.split("##")[0];
+        }
+        let ret = false;
+        const text_pos = new Vec2(win.DC.CursorPos.x,
+                            win.DC.CursorPos.y + win.DC.CurrentLineTextBaseOffset);
+        const wrap_pos_x = win.DC.TextWrapPos;
+        const wrap_enabled = flags&TextFlags.NoWidthForLargeClippedText ? false :
+                                (wrap_pos_x >= 0.);
+        if (txt.length > 2000 && !wrap_enabled)
+        {
+            // Long text!
+            // Perform manual coarse clipping to optimize for long multi-line text
+            // - From this point we will only compute the width of lines that are
+            //   visible. Optimization only available when word-wrapping is disabled.
+            // - We also don't vertically center the text within the line full
+            //   height, which is unlikely to matter because we are likely the
+            //   biggest and only item on the line.
+            // - We use memchr(), pay attention that well optimized versions of
+            //   those str/mem functions are much faster than a casually written
+            //   loop.
+            console.assert(0, "long text not implemented");
+        }
+        else
+        {
+            let style = this.GetStyle();
+            const wrap_width = wrap_enabled ?
+                    this.calcWrapWidthForPos(win.DC.CursorPos, wrap_pos_x) :
+                    0.0;
+            let stxt = txt;
+            if(flags & TextFlags.UseLabelWidth)
+                stxt = style.LabelWidth;
+
+            const text_size = this.CalcTextSize(stxt, false, wrap_width);
+            let bb = new Rect(text_pos, Vec2.Add(text_pos, text_size));
+            this.itemSize(text_size);
+            if (!this.itemAdd(bb, 0))
+                return ret;
+            
+            if(flags&TextFlags.AsHyperText)
+            {
+                let hovered = new ValRef(), held = new ValRef();
+                if (win.DC.ItemFlags & ItemFlags.ButtonRepeat)
+                    buttonflags |= ButtonFlags.Repeat;
+                ret = this.ButtonBehavior(bb, id, hovered, held, buttonflags);
+                if (ret)
+                    this.markItemEdited(id);
+                let disabled = buttonflags & ButtonFlags.Disabled;
+                let stylenm = disabled ? "TextDisabled" :
+                                (held.get() ? "LinkActive" : 
+                                    (hovered.get() ? "LinkHovered" : "Link"));
+                this.PushStyleColor("Text", style.GetColor(stylenm));
+            }
+
+            // Render (only expect ## in the AsHyperText case)
+            this.renderTextWrapped(bb.Min, txt, wrap_width);
+            if(flags&TextFlags.AsHyperText)
+                this.PopStyleColor();
+        }
+        return ret;
     },
 
     formatNumber(n, radix=10, pad=0, pad_char="0")
