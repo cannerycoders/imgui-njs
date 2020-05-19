@@ -145,7 +145,7 @@ export class Window
         this.SkipItems = false;
         this.Appearing = false;
         this.Hidden = false;
-        this.HasCloseButton = false;
+        this.HasCloseButton = false; // controlled by optional p_open, in winmgr
         this.ResizeBorderHeld = -1;
         this.BeginCount = 0;
         this.BeginOrderWithinParent = -1;

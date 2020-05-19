@@ -163,7 +163,7 @@ export class FileBrowser
             imgui.SetNextWindowZIndex(this.zIndex);
 
         let title = this.clientPrompt + "##File Browser";
-        if (!imgui.Begin(title, null, WindowFlags.NoCollapse
+        if (!imgui.Begin(title, this.IsOpen, WindowFlags.NoCollapse
              /* |WindowFlags.AlwaysAutoResize*/))
         {
             imgui.End();
