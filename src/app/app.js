@@ -151,6 +151,11 @@ export default class ImguiApp
         // overridable method
     }
 
+    OnLogActivity(lastMsg, lastLevel)
+    {
+        // overridable method
+    }
+
     ShowContextMenu(imgui)
     {
         if(imgui.BeginPopupContextVoid("ContextMenu", 1))

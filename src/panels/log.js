@@ -176,8 +176,8 @@ export class LogWindow
             this.entries = this.entries.slice(EntryCullSize);
             this.entries.push({m: "log culled", l: "INFO",  ts: now});
         }
-
         this.dirty = true;
+        this.app.OnLogActivity(this.lastMsg, this.lastMsgLevel);
     }
 
     Clear(doClose=true)
