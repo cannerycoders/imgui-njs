@@ -363,6 +363,7 @@ export class Style extends SettingsHandler
             "Default": ["Exo", "Std", "normal"],
             "Label": ["Exo", "Std", "bold"],
             "Small": ["Exo", "Small", "normal"],
+            "Med": ["Exo", "Med", "normal"],
             "Std": ["Exo", "Std", "normal"],
             "Big": ["Exo", "Big", "normal"],
             "serif": ["Georgia", "Std", "normal"],
@@ -436,6 +437,8 @@ export class Style extends SettingsHandler
             Stop: String.fromCharCode(0x0e047),
             Sync: String.fromCharCode(0x0e627),
             Trash: String.fromCharCode(0x0e872), // delete
+            UnfoldLess: String.fromCharCode(0x0e5d6), // unfold_less
+            UnfoldMore: String.fromCharCode(0x0e5d7), // unfold_more
             ViewComfy: String.fromCharCode(0x0e42a), // tighter grid
             ViewGrid: String.fromCharCode(0x0e8f0), // aka Module
             ViewHeadline: String.fromCharCode(0x0e872),
