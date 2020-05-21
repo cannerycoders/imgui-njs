@@ -188,6 +188,7 @@ export class LogWindow
         this.lastMsgLevel = "";
         if(doClose)
             this.IsShowing.set(false);
+        this.app.OnLogActivity(this.lastMsg, this.lastMsgLevel);
     }
 
     FilterEntries(filter)
