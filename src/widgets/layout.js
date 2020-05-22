@@ -16,6 +16,9 @@ import {ButtonFlags} from "./button.js";
 // - VerticalSeparator() [Internal]
 // - SplitterBehavior() [Internal]
 // - GroupBegin/End
+//
+//  notes:
+//      
 //-------------------------------------------------------------------------
 export var SeparatorFlags =
 {
@@ -190,14 +193,11 @@ export var ImguiLayoutMixin =
             win.DC.PrevLineTextBaseOffset = Math.max(0, 
                     Math.floor(.5 * (win.DC.PrevLineHeightMax - next)));
         }
-        else
-        {
-            let max = win.DC.CurrentLineHeightMax;
-            win.DC.CurrentLineHeight = next;
-            win.DC.CurrentLineHeightMax = Math.max(max, next);
-            win.DC.CurrentLineTextBaseOffset = Math.max(0, 
+        let max = win.DC.CurrentLineHeightMax;
+        win.DC.CurrentLineHeight = next;
+        win.DC.CurrentLineHeightMax = Math.max(max, next);
+        win.DC.CurrentLineTextBaseOffset = Math.max(0, 
                     Math.floor(.5 * (win.DC.CurrentLineHeightMax - next)));
-        }
     },
 
     // Horizontal/vertical separating line

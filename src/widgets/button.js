@@ -57,7 +57,7 @@ export var Icons =
 export var ImguiButtonMixin =
 {
     // out_hovered, out_held are either null or types.ValRef
-    ButtonBehavior(bbox, id, out_hovered, out_held, flags)
+    ButtonBehavior(bbox, id, out_hovered, out_held, flags=0)
     {
         let win = this.getCurrentWindow();
         let g = this.guictx;
@@ -338,12 +338,12 @@ export var ImguiButtonMixin =
     },
 
     // Small buttons fits within text without additional vertical spacing.
-    SmallButton(label)
+    SmallButton(label, flags=ButtonFlags.AlignTextBaseLine)
     {
         let g = this.guictx;
         let backup_padding_y = g.Style.FramePadding.y;
         g.Style.FramePadding.y = 0.;
-        let pressed = this.ButtonEx(label, Vec2.Zero(), ButtonFlags.AlignTextBaseLine);
+        let pressed = this.ButtonEx(label, Vec2.Zero(), flags);
         g.Style.FramePadding.y = backup_padding_y;
         return pressed;
     },
@@ -454,17 +454,25 @@ export var ImguiButtonMixin =
     },
 
     // Button to close a window
-    CloseButton(id, pos, radius)
+    CloseButton(id=null, pos=null, radius=6)
     {
         let g = this.guictx;
         let win = g.CurrentWindow;
+        if(id == null)
+            id = win.GetID("#CLOSE");
+
+        if(!pos)
+        {
+            this.SameLine(this.GetWindowWidth()-2.5*radius);
+            pos = this.GetCursorScreenPos().AddXY(0, 2.5*radius);
+        }
 
         // We intentionally allow interaction when clipped so that a mechanical
         // Alt,Right,Validate sequence close a window. (this isn't the regular
         // behavior of buttons, but it doesn't affect the user much because
         // navigation tends to keep items visible).
         let r2 = new Vec2(radius, radius);
-        let bbox = new Rect(Vec2.Subtract(pos, r2), Vec2.Add(pos, r2));
+        let bbox = new Rect(Vec2.Subtract(pos,r2), Vec2.Add(pos, r2));
         let is_clipped = !this.itemAdd(bbox, id);
 
         let hovered = new ValRef(), held = new ValRef();
