@@ -763,6 +763,7 @@ export var ImguiInputMixin =
                                (RENDER_SELECTION_WHEN_INACTIVE || render_cursor);
         let value_changed = false;
         let enter_pressed = false;
+        let enter_returns_true = (flags & InputTextFlags.EnterReturnsTrue) != 0;
 
         // When read-only we always use the live data passed to the function
         // FIXME-OPT: Because our selection/cursor code currently needs the
@@ -1111,8 +1112,8 @@ export var ImguiInputMixin =
             // Also this allows the user to use InputText() with
             // InputTextFlags.EnterReturnsTrue without maintaining any user-side
             // storage.
-            let apply_edit_back_to_user_buffer = !cancel_edit || (enter_pressed
-                            && (flags & InputTextFlags.EnterReturnsTrue) != 0);
+            let apply_edit_back_to_user_buffer = !cancel_edit || 
+                                    (enter_pressed && enter_returns_true);
             if (apply_edit_back_to_user_buffer)
             {
                 // Apply new value immediately - copy modified buffer back
@@ -1132,7 +1133,7 @@ export var ImguiInputMixin =
                              InputTextFlags.CallbackHistory |
                              InputTextFlags.CallbackAlways)) != 0)
                 {
-                    console.assert(onEdit != null);
+                    console.assert(onEdit != null || enter_returns_true);
 
                     // The reason we specify the usage semantic
                     // (Completion/History) is that Completion needs to disable
@@ -1179,7 +1180,14 @@ export var ImguiInputMixin =
                         callback_data.SelectionEnd = istate.EditState.SelectionEnd;
 
                         // Call user code
-                        onEdit(callback_data);
+                        if(onEdit)
+                            onEdit(callback_data);
+                        else
+                        if(event_key == Key.Tab && enter_returns_true)
+                        {
+                            // or return true on Tab
+                            enter_pressed = clear_active_id = true;
+                        }
 
                         // Read back what user may have modified
                         console.assert(callback_data.Flags == flags);

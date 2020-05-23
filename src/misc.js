@@ -463,8 +463,8 @@ export var ImguiMiscMixin =
                     amt *= g.IO.TouchDelta.y;
                     if(g.IO.TouchActive == 0)
                     {
-                        g.IO.TouchDelta.y *= .8;
-                        if(Math.abs(g.IO.TouchDelta.y) < .25)
+                        g.IO.TouchDelta.y *= .95; // <-- vertical deceleration
+                        if(Math.abs(g.IO.TouchDelta.y) < .15)
                             g.IO.TouchDelta.y = 0;
                     }
                 }
@@ -481,6 +481,12 @@ export var ImguiMiscMixin =
             else
             {
                 amt *= g.IO.TouchDelta.x;
+                if(g.IO.TouchActive == 0)
+                {
+                    g.IO.TouchDelta.x *= .75; // <-- horizontal deceleration
+                    if(Math.abs(g.IO.TouchDelta.x) < .15)
+                        g.IO.TouchDelta.x = 0;
+                }
             }
             scroll_window.SetWindowScrollX(scroll_window.Scroll.x - amt);
         }

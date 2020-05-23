@@ -460,11 +460,15 @@ export var ImguiButtonMixin =
         let win = g.CurrentWindow;
         if(id == null)
             id = win.GetID("#CLOSE");
+        let restorePos = null;
 
         if(!pos)
         {
-            this.SameLine(this.GetWindowWidth()-2.5*radius);
-            pos = this.GetCursorScreenPos().AddXY(0, 2.5*radius);
+            restorePos = this.GetCursorPosY();
+            if(isNaN(restorePos))
+                restorePos = null;
+            let startPos = this.GetCursorScreenStartPos(); // in screen coords
+            pos = startPos.AddXY(this.GetWindowWidth()-4*radius, 2*radius);
         }
 
         // We intentionally allow interaction when clipped so that a mechanical
@@ -475,10 +479,14 @@ export var ImguiButtonMixin =
         let bbox = new Rect(Vec2.Subtract(pos,r2), Vec2.Add(pos, r2));
         let is_clipped = !this.itemAdd(bbox, id);
 
+        if(restorePos)
+            this.SetCursorPosY(restorePos);
+
         let hovered = new ValRef(), held = new ValRef();
         let pressed = this.ButtonBehavior(bbox, id, hovered, held);
         if (is_clipped)
             return pressed;
+
 
         // Render
         let center = bbox.GetCenter();

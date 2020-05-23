@@ -512,7 +512,7 @@ export var ImguiLayoutMixin =
         }
     },
 
-    // initial cursor position in window coordinates
+    // initial cursor position in window/local coordinates
     GetCursorStartPos()
     {
         let win = this.getCurrentWindowRead();
@@ -525,6 +525,12 @@ export var ImguiLayoutMixin =
     {
         let win = this.getCurrentWindowRead();
         return win.DC.CursorPos.Clone();
+    },
+
+    GetCursorScreenStartPos()
+    {
+        let win = this.getCurrentWindowRead();
+        return win.DC.CursorStartPos;
     },
 
     // cursor position in absolute screen coordinates [0..io.DisplaySize]

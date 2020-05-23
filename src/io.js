@@ -769,7 +769,8 @@ export class IO
     {
         this.MousePos.x = evt.offsetX;
         this.MousePos.y = evt.offsetY;
-        if (this.WantCaptureMouse) {
+        if (this.WantCaptureMouse) 
+        {
             evt.preventDefault();
         }
         // console.log(`${this.MousePos.x.toFixed(0)}, ${this.MousePos.y.toFixed(0)}`);
@@ -824,6 +825,9 @@ export class IO
                 // console.log("touchstart:" + i + " " + Math.round(touches[i].clientY));
                 this.Touches.push(this.copyTouch(touches[i]));
                 this.TouchActive++;
+
+                this.TouchDelta.x = 0; // <-- cancel deceleration
+                this.TouchDelta.y = 0;
             }
         }
         this.Dirty = DirtyCount;
@@ -877,7 +881,7 @@ export class IO
     {
         let touches = evt.changedTouches;
         let offset = {x: 0, y: 0};
-        let scale = .1;
+        let scale = .01; // <---- scaling constant determined experimentally
         for (let i = 0; i < touches.length; i++) 
         {
             if(this.validateTouch(touches[i], offset))
