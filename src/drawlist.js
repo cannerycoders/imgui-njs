@@ -273,6 +273,8 @@ export class DrawList
             col = col.AsStr();
         if(clipRect!=null)
         {
+            /* need to clip the clipRect against the current clipRect */
+            clipRect.ClipWith(this.GetClipRect());
             clip = [clipRect.Min.x, clipRect.Min.y,
                     clipRect.GetWidth(), clipRect.GetHeight()];
         }
