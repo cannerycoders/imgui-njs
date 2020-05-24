@@ -882,6 +882,7 @@ export class IO
         let touches = evt.changedTouches;
         let offset = {x: 0, y: 0};
         let scale = .01; // <---- scaling constant determined experimentally
+                         // see also misc.js for deceleration constant
         for (let i = 0; i < touches.length; i++) 
         {
             if(this.validateTouch(touches[i], offset))
