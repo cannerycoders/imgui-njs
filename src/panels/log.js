@@ -79,7 +79,10 @@ export class LogWindow
     Debug(msg, ...args)
     {
         // send debug message to real console
-        this.console.log("DEBUG " + msg + args.join(" "));
+        let d = new Date();
+        let h = ("0" + d.getHours()).slice(-2);
+        let m = ("0" + d.getMinutes()).slice(-2);
+        this.console.log(`${h}:${m} DEBUG ` + msg + args.join(" "));
         // was: this.log(msg, "DEBUG", args);
     }
 
