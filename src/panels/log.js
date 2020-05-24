@@ -13,6 +13,17 @@ export function GetLog()
 const MaxEntries = 2000;
 const EntryCullSize = 100;
 
+// Our log should work with either fixed or variable-width fonts.
+// we select short lower-case since color is emphasis
+const sLevelShorten = 
+{
+    "ERROR": "err",
+    "WARNING": "warn",
+    "NOTICE": "note",
+    "INFO": "info",
+    "DEBUG": "dbg",
+};
+
 export class LogWindow
 {
     constructor(app)
@@ -67,19 +78,19 @@ export class LogWindow
 
     Debug(msg, ...args)
     {
-        // this.log(msg, "DEBUG", args);
         // send debug message to real console
         this.console.log("DEBUG " + msg + args.join(" "));
+        // was: this.log(msg, "DEBUG", args);
     }
 
     Info(msg, ...args)
     {
-        this.log(msg, "INFO", args);
+        this.log(msg, "INFO", args); // nb: levels are styles, see sLevelShorten
     }
 
     Notice(msg, ...args)
     {
-        this.log(msg, "NOTICE", args);
+        this.log(msg, "NOTICE", args);// nb: levels are styles, see sLevelShorten
     }
 
     Warning(msg, ...args)
@@ -252,7 +263,8 @@ export class LogWindow
                                 WindowFlags.HorizontalScrollbar);
             if(this.entries.length)
             {
-                imgui.PushFont("monospace");
+                let font = imgui.PushFont("Small");
+                let offset = font.MeasureWidth("MMMMMMM");
                 for(let i = 0; i < this.entries.length; i++)
                 {
                     let entry = this.entries[i];
@@ -268,11 +280,11 @@ export class LogWindow
                     if(c)
                         imgui.PushStyleColor("Text",  c);
                     let head = this.formatEntryHead(entry);
-                    imgui.Text(this.formatEntryHead(entry));
+                    imgui.Text(head);
                     if(c)
                         imgui.PopStyleColor();
-                    imgui.SameLine();
-                    imgui.Text(". %s", msg);
+                    imgui.SameLine(offset);
+                    imgui.Text(msg);
                     if(toClipboard)
                         toClipboard.push(`${head} . ${msg}`);
                 }
@@ -295,8 +307,8 @@ export class LogWindow
         let d = new Date(entry.ts);
         let h = ("0" + d.getHours()).slice(-2);
         let m = ("0" + d.getMinutes()).slice(-2);
-        return (entry.l+"     ").slice(0, 8) +
-                    `${h}:${m}`;
+        let l = sLevelShorten[entry.l];
+        return `${h}:${m} ${l}`;
     }
 }
 

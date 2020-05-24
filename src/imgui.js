@@ -636,6 +636,7 @@ export class Imgui extends ImguiMixins
         this.SetFont(font);
         if(fixBaseline)
             this.AlignTextToFrameCenter();
+        return font;
     }
 
     PopFont(fixBaseline=false)
@@ -647,6 +648,7 @@ export class Imgui extends ImguiMixins
         this.SetFont(font);
         if(fixBaseline)
             this.AlignTextToFrameCenter(true);
+        return font;
     }
 
     getDefaultFont()
