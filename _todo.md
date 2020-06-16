@@ -27,6 +27,11 @@
 
 #### logging
 
+#### filesystem
+
+* eliminate dependency on electron remote module.
+* migrate filebrowser to html File, etc..
+
 #### drawing/rendering
 
 * custom mouse cursors
