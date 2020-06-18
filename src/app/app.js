@@ -24,8 +24,6 @@ export default class ImguiApp
         this.runtime = (window.process && window.process.type) ? "electron" 
                         : (window.cordova) ? "cordova" : "browser";
         this.filesystem = new FileSystem(this.runtime);
-        this.fs = this.filesystem.fs;
-        this.path = this.filesystem.path;
         this.canvas = document.getElementById("AppCanvas");
         if(!this.canvas)
         {

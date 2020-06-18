@@ -48,9 +48,15 @@ export class FileSystem
         if(runtime == "electron")
         {
             // we use window.require to trick webpack for electron
+            /* we don't want to use remote package since it's 
+             * deprecated.
+             */
+
+            /*
             let remote = window.require("electron").remote;
             this.fs = remote.require("fs");
             this.path = window.require("path"); 
+            */
             this.isWindows = navigator && 
                             (navigator.platform.indexOf("Win32") != -1);
         }

@@ -453,4 +453,30 @@ export var ImguiColorEditMixin =
 
         return pressed;
     },
+
+    // Note: only access 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
+    colorTooltip(text, col, flags)
+    {
+        let g = this.guictx;
+        this.beginTooltipEx(0, true);
+        let label = text.split("##")[0];
+        if (label.length)
+        {
+            this.textEx(label);
+            this.Separator();
+        }
+
+        let sz = new Vec2(g.FontSize * 3 + g.Style.FramePadding.y * 2,
+                        g.FontLineHeight * 3 + g.Style.FramePadding.y * 2);
+        this.ColorButton("##preview", col, (flags & (ColorEditFlags.InputMask |
+                                                    ColorEditFlags.NoAlpha |
+                                                    ColorEditFlags.AlphaPreview |
+                                                    ColorEditFlags.AlphaPreviewHalf)) |
+                                                    ColorEditFlags.NoTooltip,
+                        sz);
+        this.SameLine();
+        this.Text(col.AsMultiStr(flags & ColorEditFlags.NoAlpha));
+        this.EndTooltip();
+    },
+
 };
