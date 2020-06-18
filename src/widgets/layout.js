@@ -175,29 +175,45 @@ export var ImguiLayoutMixin =
                                             g.Style.FramePadding.y);
     },
 
-    // NB this depends on the current font... we adjust the text baseoffset
-    AlignTextToFrameCenter(prevLine=false)
+    // AlignTextToFrameCenter may be useful in lines with a variety
+    // of font sizes.  The goal is to cause Big and small fonts
+    // to share a midline (defined as Baseline / 2). The knob that
+    // governs this is "CurrentLineTextBaseOffset", and the method above
+    // only increases this value (always takes the max encountered).
+    // This method allows the value to grow and to shrink according to
+    // the current font.  A problem arises whereby a line begins with
+    // a small font, the proceeds to a large one.  In this case the large
+    // font may interfere with the previous line. To address this we require
+    // an estimated maxFrameHeight which should be shared for all text items
+    // that require centering on a line.  This call should be made after a
+    // font change occurs.
+    //
+    //   CursorY <---                          
+    //    ^                                   ^
+    //    | FramePadding.y                    |
+    //    v                                   |
+    //    TextBaseOffset  <----               |  Current line height
+    //    A line of text <____ baseline       |  (FontLineHeight is Font.size*linespacing)
+    //    ^                                   |   
+    //    | FramePadding.y                    |
+    //    v                                   v
+    //
+    AlignTextToFrameCenter(maxFontHeight)
     {
         let win = this.getCurrentWindow();
         if (win.SkipItems)
             return;
 
         let g = this.guictx;
-        let next = g.FontLineHeight + g.Style.FramePadding.y * 2;
-        if(prevLine)
-        {
-            // this case is useful to handle a PopFont(),SameLine() sequence
-            let max = win.DC.PrevLineHeightMax;
-            win.DC.PrevLineHeight = next;
-            win.DC.PrevLineHeightMax = Math.max(max, next);
-            win.DC.PrevLineTextBaseOffset = Math.max(0, 
-                    Math.floor(.5 * (win.DC.PrevLineHeightMax - next)));
-        }
-        let max = win.DC.CurrentLineHeightMax;
+        let ypad = g.Style.FramePadding.y;
+        let next = g.FontLineHeight + ypad * 2;
         win.DC.CurrentLineHeight = next;
-        win.DC.CurrentLineHeightMax = Math.max(max, next);
-        win.DC.CurrentLineTextBaseOffset = Math.max(0, 
-                    Math.floor(.5 * (win.DC.CurrentLineHeightMax - next)));
+        win.DC.CurrentLineHeightMax = Math.max(win.DC.CurrentLineHeightMax, next);
+
+        let mid = maxFontHeight / 2; // NB: thiis the font center, not the 
+        let fmid = this.GetFontMidline();
+        let off = ypad + (mid - fmid); // if fmid is 12 and mid is 24, off is +12
+        win.DC.CurrentLineTextBaseOffset = Math.max(ypad, off);
     },
 
     // Horizontal/vertical separating line

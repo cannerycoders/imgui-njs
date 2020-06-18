@@ -275,7 +275,18 @@ export var ImguiTextMixin =
         let mtext = label;
         if(txtflags & TextFlags.UseLabelWidth)
             mtext = style.LabelWidth;
-        const labelSize = this.CalcTextSize(mtext, true);
+
+        // we cache results of CalcTextSize since it's expensive and
+        // the number of labels is presumed limited.
+        let key = mtext + g.Font.AsStr();
+        if(!this.labelSizeCache) 
+            this.labelSizeCache = {};
+        let labelSize = this.labelSizeCache[key];
+        if(!labelSize)
+        {
+            labelSize = this.CalcTextSize(mtext, false /*split before ## */);
+            this.labelSizeCache[key] = labelSize; // a Vec2
+        }
         const labelBB = new Rect(win.DC.CursorPos,
                                   Vec2.AddXY(win.DC.CursorPos,
                                     labelSize.x + style.FramePadding.x, 

@@ -603,6 +603,7 @@ export class Imgui extends ImguiMixins
         let g = this.guictx;
         g.Font = font;
         g.FontSize = font.Size;
+        g.FontMidline = font.Baseline / 2;
         g.FontLineHeight = font.Size * this.GetLineHeightPct();
     }
 
@@ -610,6 +611,12 @@ export class Imgui extends ImguiMixins
     {
         let g = this.guictx;
         return g.FontSize;
+    }
+
+    GetFontMidline()
+    {
+        let g = this.guictx;
+        return g.FontMidline;
     }
 
     GetLineHeight() // useful for computing vertical spacing
@@ -624,7 +631,7 @@ export class Imgui extends ImguiMixins
         return g.Style.TextLineHeightPct; // usually in the range (.75-1.5)
     }
 
-    PushFont(font, fixBaseline=false)
+    PushFont(font)
     {
         if(typeof(font) == "string")
             font = this.guictx.Style.GetFont(font);
@@ -634,20 +641,16 @@ export class Imgui extends ImguiMixins
 
         this.guictx.FontStack.push(font);
         this.SetFont(font);
-        if(fixBaseline)
-            this.AlignTextToFrameCenter();
         return font;
     }
 
-    PopFont(fixBaseline=false)
+    PopFont()
     {
         this.guictx.FontStack.pop();
         let font = this.guictx.FontStack[this.guictx.FontStack.length-1];
         if(!font)
             font = this.getDefaultFont();
         this.SetFont(font);
-        if(fixBaseline)
-            this.AlignTextToFrameCenter(true);
         return font;
     }
 
