@@ -418,6 +418,12 @@ export var ImguiMenuMixin =
     },
 
     /**
+    * 
+    * @param {*} label 
+    * @param {*} shortcut 
+    * @param {*} selected 
+    * @param {*} enabled 
+    * 
     * return true when activated. shortcuts are displayed for convenience but
     * not processed by ImGui at the moment. 'selected' can be either a
     * boolean or a ValRef.

@@ -255,6 +255,15 @@ export var ImguiTextMixin =
 
     // Add a text label that has vertical alignment equivalent to
     // input text.  Used to bypass labels on right behavior.
+    // NB: this is easy to confuse with LabelText (below)
+
+    LabelDisabled(label, txtflags=TextFlags.UseLabelWidth)
+    {
+        this.PushStyleColor("Text", this.guictx.Style.Colors.TextDisabled);
+        this.Label(label, txtflags);
+        this.PopStyleColor();
+    },
+
     Label(label, txtflags=TextFlags.UseLabelWidth)
     {
         let win = this.getCurrentWindow();

@@ -376,7 +376,11 @@ export var ImguiButtonMixin =
         let win = this.getCurrentWindow();
         if (win.SkipItems)
             return false;
-
+        if(!size)
+        {
+            let sz = this.GetFrameHeight();
+            size = new Vec2(sz, sz);
+        }
         let g = this.guictx;
         let id = win.GetID(str_id);
         let bbox = new Rect(win.DC.CursorPos, Vec2.Add(win.DC.CursorPos, size));
@@ -390,6 +394,7 @@ export var ImguiButtonMixin =
 
         let hovered = new ValRef(), held = new ValRef();
         let pressed = this.ButtonBehavior(bbox, id, hovered, held, flags);
+        let disabled = flags & ButtonFlags.Disabled;
 
         // Render
         let col = g.Style.GetColor((held.get() && hovered.get() ?
@@ -399,7 +404,7 @@ export var ImguiButtonMixin =
         this.renderArrow(Vec2.Add(bbox.Min,
                             new Vec2(Math.max(0., (size.x - g.FontSize) * 0.5),
                                      Math.max(0., (size.y - g.FontSize) * 0.5))
-                                ), dir);
+                                ), dir, 1/*scale*/, disabled);
 
         return pressed;
     },

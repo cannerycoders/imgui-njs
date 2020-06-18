@@ -236,7 +236,7 @@ export var ImguiRenderMixin =
         }
     },
 
-    renderArrow(p_min, dir, scale=1)
+    renderArrow(p_min, dir, scale=1, disabled=false)
     {
         let g = this.guictx;
         const h = g.FontSize;
@@ -267,10 +267,8 @@ export var ImguiRenderMixin =
         }
 
         g.CurrentWindow.DrawList.AddTriangleFilled(
-                Vec2.Add(center, a),
-                Vec2.Add(center, b),
-                Vec2.Add(center, c),
-                g.Style.GetColor("Text")
+            Vec2.Add(center, a), Vec2.Add(center, b), Vec2.Add(center, c),
+            disabled ? g.Style.GetColor("TextDisabled") : g.Style.GetColor("Text")
         );
     },
 
