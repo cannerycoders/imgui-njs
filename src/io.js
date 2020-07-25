@@ -19,6 +19,9 @@ export class IO
         this.PrevTime = 0;
         this.PrevDirtyTime = 0;
         this.Dirty = 0;
+        this.SynthesizePointerEvents = 
+            navigator.userAgent.indexOf("iPhone") !== -1 ||
+            navigator.userAgent.indexOf("iPad") !== -1;
 
         //------------------------------------------------------------------
         // Configuration (fill once)
@@ -363,14 +366,20 @@ export class IO
             // motion. This wouldn't work for draggables like sliders and
             // drags.  Currently we update this.Touch* and support 
             // mouse-wheel-like behavior in imgui.updateMouseWheel().
-            canvas.addEventListener("touchstart", this.onTouchStart.bind(this),
+            if(1)
+            {
+                if()
+                canvas.addEventListener("touchstart", this.onTouchStart.bind(this),
                                     {passive: true});
-            canvas.addEventListener("touchend", this.onTouchEnd.bind(this),
+                canvas.addEventListener("touchend", this.onTouchEnd.bind(this),
                                     {passive: true});
-            canvas.addEventListener("touchcancel", this.onTouchCancel.bind(this),
+                canvas.addEventListener("touchcancel", this.onTouchCancel.bind(this),
                                     {passive: true});
-            canvas.addEventListener("touchmove", this.onTouchMove.bind(this),
+                canvas.addEventListener("touchmove", this.onTouchMove.bind(this),
                                     {passive: true});
+            }
+            else
+                this.installPointerPolyfill();
         }
 
         // Setup back-end capabilities flags
@@ -828,6 +837,10 @@ export class IO
 
                 this.TouchDelta.x = 0; // <-- cancel deceleration
                 this.TouchDelta.y = 0;
+                
+                if(this.SynthesizePointerEvents)
+                {
+                }
             }
         }
         this.Dirty = DirtyCount;
@@ -855,6 +868,9 @@ export class IO
                 {
                     // console.log("hm: " + touches[i].identifier);
                 }
+                if(this.SynthesizePointerEvents)
+                {
+                }
             }
             else
                 console.error("invalid touch");
@@ -872,6 +888,9 @@ export class IO
             {
                 this.TouchActive--;
                 this.Touches.splice(j, 1);
+            }
+            if(this.SynthesizePointerEvents)
+            {
             }
         }
         this.Dirty = DirtyCount;
@@ -1026,7 +1045,7 @@ export class IO
 
     // see misc.js for updateMouseWheel
 
-    pointsPolyfill()
+    installPointerPolyfill()
     {
         // MIT licensed, copyright Rich Harris
         // https://github.com/Rich-Harris/Points
