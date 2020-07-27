@@ -831,14 +831,15 @@ export class IO
 
                 this.TouchDelta.x = 0; // <-- cancel deceleration
                 this.TouchDelta.y = 0;
-                if(this.SynthesizePointerEvents())
+                if(this.SynthesizePointerEvents)
                 {
                     // https://github.com/Rich-Harris/Point
                     // pointerOver (we're not currently using this)
                     // pointerEnter, (we're not currently using this)
                     // pointerDown
+                    this.fakePointerEvent(evt, touches[i]);
                     this.onPointerMove(evt);
-                    this.onPointerDown(evt);
+                    this.onPointerDown(evt); // XXX: button mapping
                 }
             }
         }
@@ -869,8 +870,9 @@ export class IO
                     this.TouchDelta.x = deltaX * scale;
                     this.TouchDelta.y = deltaY * scale;
                 }
-                if(this.SynthesizePointerEvents())
+                if(this.SynthesizePointerEvents)
                 {
+                    this.fakePointerEvent(evt, touches[i]);
                     this.onPointerMove(evt);
                 }
             } 
@@ -904,8 +906,9 @@ export class IO
                 {
                     // console.log("hm: " + touches[i].identifier);
                 }
-                if(this.SynthesizePointerEvents())
+                if(this.SynthesizePointerEvents)
                 {
+                    this.fakePointerEvent(evt, touches[i]);
                     this.onPointerUp(evt);
                 }
             }
@@ -926,12 +929,25 @@ export class IO
                 this.TouchActive--;
                 this.Touches.splice(j, 1);
             }
-            if(this.SynthesizePointerEvents())
+            if(this.SynthesizePointerEvents)
             {
+                this.fakePointerEvent(evt, touches[i]);
                 this.onPointerUp(evt);
             }
         }
         this.Dirty = DirtyCount;
+    }
+
+    fakePointerEvent(evt, touch)
+    {
+        // add fields to event that are needed by onPointer[Move,Down,Up]
+        // touch.client{X,Y} is coordinate of touch poihnt relative to
+        // the browser's viewport excluding scroll offset
+        let r = evt.target.getBoundingClientRect();
+        evt.button = 0;
+        evt.offsetX = touch.clientX - r.left;
+        evt.offsetY = touch.clientY - r.top;
+        evt.preventDefault();
     }
 
     getTouchIndex(t)
