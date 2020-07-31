@@ -305,6 +305,32 @@ export class LogWindow
         imgui.End();
     }
 
+    GetLevelColor(imgui, lev)
+    {
+        let c;
+        if(imgui)
+        {
+            if(lev == "")
+                c = "#222";
+            else
+            {
+                let imc = imgui.guictx.Style.GetColor(lev);
+                c = imc.AsStr();
+            }
+        }
+        else
+        {
+            c = {
+                "": "#222",
+                "INFO": "#448",
+                "NOTICE": "#24a",
+                "WARNING": "#942",
+                "ERROR": "#a42",
+            }[lev];
+        }
+        return c;
+    }
+
     formatEntryHead(entry)
     {
         let d = new Date(entry.ts);
