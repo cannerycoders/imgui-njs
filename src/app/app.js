@@ -14,7 +14,7 @@ import {FileSystem} from "./filesystem.js";
 
 export default class ImguiApp
 {
-    constructor(appname="UntitledImguiApp", version="1.0.0")
+    constructor(appname="UntitledImguiApp", version="1.0.0", initLog=true)
     {
         console.debug("App Init " + new Date().toLocaleString());
         this.appname = appname;
@@ -48,6 +48,11 @@ export default class ImguiApp
             return this.imgui.guictx.IO.ConfigFlags & ConfigFlags.IsTouchScreen;
         else
             return this.IsMobileDevice();
+    }
+
+    OnLogActivity(msg, level)
+    {
+        // overridable
     }
 
     IsMobileDevice()
@@ -128,14 +133,16 @@ export default class ImguiApp
         }
     }
 
-    OnLoop(time) // called e.g. 60 fps
+    OnLoop(time) // called e.g. 60 fps, subclass may override
     {
         if(!this.canvas) return;
         if(this.imgui.NewFrame(time))
         {
             this.ShowContextMenu(this.imgui);
-            this.FileBrowser.Show(this.imgui); // manages its own IsOpen state
-            this.Log.Show(this.imgui, "Log");
+            if(this.FileBrowser)
+                this.FileBrowser.Show(this.imgui); // manages its own IsOpen state
+            if(this.Log)
+                this.Log.Show(this.imgui, "Log");
             this.OnFrame(this.imgui); // subclass hooks in here
             this.imgui.Render(); // calls EndFrame
         }
@@ -158,9 +165,12 @@ export default class ImguiApp
     {
         if(imgui.BeginPopupContextVoid("ContextMenu", 1))
         {
-            if(imgui.MenuItem("Log", null, this.Log.IsShowing.get()))
+            if(this.Log)
             {
-                this.Log.IsShowing.toggle();
+                if(imgui.MenuItem("Log", null, this.Log.IsShowing.get()))
+                {
+                    this.Log.IsShowing.toggle();
+                }
             }
 
             this.AppendContextMenu(imgui);

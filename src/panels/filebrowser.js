@@ -60,6 +60,11 @@ export class FileBrowser
         this.imgui = null;
     }
 
+    InstallFilesys(filesys)
+    {
+        this.filesys = filesys;
+    }
+
     Begin(imgui)
     {
         this.imgui = imgui;
